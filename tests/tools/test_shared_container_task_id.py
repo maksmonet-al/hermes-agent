@@ -30,6 +30,12 @@ def _clean_overrides():
     terminal_tool._task_env_overrides.update(before)
 
 
+def test_kanban_worker_uses_its_explicit_task_id(monkeypatch):
+    """Kanban workers must never inherit the generic default container."""
+    monkeypatch.setenv("HERMES_KANBAN_TASK", "t_review_ro")
+    assert terminal_tool._resolve_container_task_id(None) == "t_review_ro"
+
+
 def test_none_task_id_maps_to_default():
     assert terminal_tool._resolve_container_task_id(None) == "default"
 

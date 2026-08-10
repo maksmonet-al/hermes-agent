@@ -102,11 +102,11 @@ function EditorBody({
   const handleSave = async () => {
     setError(null);
     if (!isEdit && !name.trim()) {
-      setError("Skill name is required.");
+      setError("Укажите имя навыка.");
       return;
     }
     if (!content.trim()) {
-      setError("SKILL.md content is required.");
+      setError("Добавьте содержимое SKILL.md.");
       return;
     }
     setSaving(true);
@@ -138,12 +138,12 @@ function EditorBody({
     <>
       <DialogHeader>
         <DialogTitle>
-          {isEdit ? `Edit skill: ${editName}` : "New skill"}
+          {isEdit ? `Редактирование навыка: ${editName}` : "Новый навык"}
         </DialogTitle>
         <DialogDescription>
           {isEdit
-            ? "Rewrite this skill's SKILL.md. Frontmatter (name, description) is validated on save."
-            : "Author a custom skill — YAML frontmatter plus markdown instructions. It becomes available to the agent and attachable to cron jobs."}
+            ? "Измените SKILL.md этого навыка. Метаданные (имя и описание) проверяются при сохранении."
+            : "Создайте собственный навык: YAML-метаданные и инструкции Markdown. Навык станет доступен агенту и его можно будет прикреплять к cron-задачам."}
         </DialogDescription>
       </DialogHeader>
 
@@ -151,7 +151,7 @@ function EditorBody({
         {!isEdit && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-1.5">
-              <Label htmlFor="skill-editor-name">Name</Label>
+              <Label htmlFor="skill-editor-name">Имя</Label>
               <Input
                 id="skill-editor-name"
                 autoFocus
@@ -161,7 +161,7 @@ function EditorBody({
               />
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="skill-editor-category">Category (optional)</Label>
+              <Label htmlFor="skill-editor-category">Категория (необязательно)</Label>
               <Input
                 id="skill-editor-category"
                 placeholder="devops"
@@ -197,7 +197,7 @@ function EditorBody({
 
         <div className="flex items-center justify-end gap-2">
           <Button ghost size="sm" onClick={onClose} disabled={saving}>
-            Cancel
+            Отмена
           </Button>
           <Button
             size="sm"
@@ -206,7 +206,7 @@ function EditorBody({
             disabled={saving || loading}
             prefix={saving ? <Spinner /> : undefined}
           >
-            {saving ? "Saving…" : isEdit ? "Save changes" : "Create skill"}
+            {saving ? "Сохранение…" : isEdit ? "Сохранить изменения" : "Создать навык"}
           </Button>
         </div>
       </div>

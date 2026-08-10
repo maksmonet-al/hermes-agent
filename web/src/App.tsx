@@ -107,7 +107,7 @@ import { latchChatActivation } from "@/lib/chat-activation";
 import { api } from "@/lib/api";
 import type { StatusResponse, UpdateCheckResponse } from "@/lib/api";
 
-function RouteFallback({ label = "Loading…" }: { label?: string }) {
+function RouteFallback({ label = "Загрузка…" }: { label?: string }) {
   return (
     <div
       className="flex min-h-[12rem] flex-1 items-center justify-center"
@@ -137,7 +137,7 @@ function UnknownRouteFallback({ pluginsLoading }: { pluginsLoading: boolean }) {
 const CHAT_NAV_ITEM: NavItem = {
   path: "/chat",
   labelKey: "chat",
-  label: "Chat",
+  label: "Чат",
   icon: Terminal,
 };
 
@@ -186,38 +186,38 @@ const BUILTIN_NAV_REST: NavItem[] = [
   {
     path: "/sessions",
     labelKey: "sessions",
-    label: "Sessions",
+    label: "Сессии",
     icon: MessageSquare,
   },
-  { path: "/files", label: "Files", icon: FolderOpen },
+  { path: "/files", label: "Файлы", icon: FolderOpen },
   {
     path: "/analytics",
     labelKey: "analytics",
-    label: "Analytics",
+    label: "Аналитика",
     icon: BarChart3,
   },
   {
     path: "/models",
     labelKey: "models",
-    label: "Models",
+    label: "Модели",
     icon: Cpu,
   },
-  { path: "/logs", labelKey: "logs", label: "Logs", icon: FileText },
-  { path: "/cron", labelKey: "cron", label: "Cron", icon: Clock },
-  { path: "/skills", labelKey: "skills", label: "Skills", icon: Package },
-  { path: "/plugins", labelKey: "plugins", label: "Plugins", icon: Puzzle },
+  { path: "/logs", labelKey: "logs", label: "Журналы", icon: FileText },
+  { path: "/cron", labelKey: "cron", label: "Cron-задачи", icon: Clock },
+  { path: "/skills", labelKey: "skills", label: "Навыки", icon: Package },
+  { path: "/plugins", labelKey: "plugins", label: "Плагины", icon: Puzzle },
   { path: "/mcp", label: "MCP", icon: Plug },
-  { path: "/channels", label: "Channels", icon: Radio },
-  { path: "/webhooks", label: "Webhooks", icon: Webhook },
-  { path: "/pairing", label: "Pairing", icon: ShieldCheck },
-  { path: "/profiles", labelKey: "profiles", label: "Profiles", icon: Users },
-  { path: "/config", labelKey: "config", label: "Config", icon: Settings },
-  { path: "/env", labelKey: "keys", label: "Keys", icon: KeyRound },
-  { path: "/system", label: "System", icon: Wrench },
+  { path: "/channels", label: "Каналы", icon: Radio },
+  { path: "/webhooks", label: "Вебхуки", icon: Webhook },
+  { path: "/pairing", label: "Сопряжение", icon: ShieldCheck },
+  { path: "/profiles", labelKey: "profiles", label: "Профили", icon: Users },
+  { path: "/config", labelKey: "config", label: "Конфигурация", icon: Settings },
+  { path: "/env", labelKey: "keys", label: "Ключи", icon: KeyRound },
+  { path: "/system", label: "Система", icon: Wrench },
   {
     path: "/docs",
     labelKey: "documentation",
-    label: "Documentation",
+    label: "Документация",
     icon: BookOpen,
   },
 ];
@@ -717,7 +717,7 @@ export default function App() {
 
                 <SidebarIconWithTooltip
                   collapsed={isDesktopCollapsed}
-                  label={t.theme?.switchTheme ?? "Switch theme"}
+                  label={t.theme?.switchTheme ?? "Сменить тему"}
                   tooltipWarmRef={tooltipWarmRef}
                 >
                   <ThemeSwitcher collapsed={isDesktopCollapsed} dropUp />
@@ -785,7 +785,7 @@ export default function App() {
                   !chatOverriddenByPlugin &&
                   (pluginsLoading ? (
                     isChatRoute ? (
-                      <RouteFallback label="Loading chat…" />
+                      <RouteFallback label="Загрузка чата…" />
                     ) : null
                   ) : chatHostMounted ? (
                     <div
@@ -799,7 +799,7 @@ export default function App() {
                       <Suspense
                         fallback={
                           isChatRoute ? (
-                            <RouteFallback label="Loading chat…" />
+                            <RouteFallback label="Загрузка чата…" />
                           ) : null
                         }
                       >
@@ -807,7 +807,7 @@ export default function App() {
                       </Suspense>
                     </div>
                   ) : isChatRoute ? (
-                    <RouteFallback label="Loading chat…" />
+                    <RouteFallback label="Загрузка чата…" />
                   ) : null)}
               </div>
               <PluginSlot name="post-main" />
@@ -967,12 +967,12 @@ function SidebarSystemActions({
     if (updateConfirmInfo?.behind && updateConfirmInfo.behind > 0) {
       const cmd = updateConfirmInfo.update_command;
       const n = updateConfirmInfo.behind;
-      return `This will run 'hermes update' (${cmd}) and pull ${n} new commit${n === 1 ? "" : "s"}. The gateway restarts when the update finishes; the current session keeps its prompt cache until then.`;
+      return `Будет выполнена команда 'hermes update' (${cmd}) и загружено новых коммитов: ${n}. После обновления шлюз перезапустится; до этого текущая сессия сохранит кеш промпта.`;
     }
     const cmd = updateConfirmInfo?.update_command ?? "hermes update";
     return (
       t.status.updateHermesConfirmMessage ??
-      `This will run 'hermes update' (${cmd}) and restart the gateway when it finishes.`
+      `Будет выполнена команда 'hermes update' (${cmd}), после чего шлюз перезапустится.`
     );
   }, [t.status.updateHermesConfirmMessage, updateConfirmInfo]);
 
@@ -1070,7 +1070,7 @@ function SidebarSystemActions({
       confirmLabel={t.status.restartGateway}
       description={
         t.status.restartGatewayConfirmMessage ??
-        "This restarts the Hermes gateway process. Connected channels and active sessions will reconnect afterward."
+        "Процесс шлюза Hermes будет перезапущен. После этого подключённые каналы и активные сессии переподключатся."
       }
       loading={pendingAction === "restart"}
       onCancel={() => setRestartConfirmOpen(false)}
@@ -1083,7 +1083,7 @@ function SidebarSystemActions({
 
     <ConfirmDialog
       cancelLabel={t.common.cancel}
-      confirmLabel={t.status.updateHermesConfirmNow ?? "Update now"}
+      confirmLabel={t.status.updateHermesConfirmNow ?? "Обновить сейчас"}
       description={
         updateConfirmChecking ? t.common.loading : updateConfirmDescription
       }

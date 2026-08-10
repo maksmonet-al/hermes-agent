@@ -72,14 +72,14 @@ describe("buildMcpServerCreate", () => {
 
   it("rejects missing transport fields and Bearer tokens", () => {
     expect(() => buildMcpServerCreate(emptyMcpServerDraft())).toThrow(
-      "Name required",
+      "Укажите имя",
     );
     expect(() =>
       buildMcpServerCreate({
         ...emptyMcpServerDraft(),
         name: "remote",
       }),
-    ).toThrow("URL required");
+    ).toThrow("Укажите URL");
     expect(() =>
       buildMcpServerCreate({
         ...emptyMcpServerDraft(),
@@ -87,13 +87,13 @@ describe("buildMcpServerCreate", () => {
         url: "https://example.com/mcp",
         httpAuth: "header",
       }),
-    ).toThrow("Bearer token required");
+    ).toThrow("Укажите Bearer-токен");
     expect(() =>
       buildMcpServerCreate({
         ...emptyMcpServerDraft(),
         name: "local",
         transport: "stdio",
       }),
-    ).toThrow("Command required");
+    ).toThrow("Укажите команду");
   });
 });

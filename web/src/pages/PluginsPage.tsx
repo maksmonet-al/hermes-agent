@@ -35,10 +35,10 @@ const MEMORY_PROVIDER_BUILTIN = "__hermes_memory_builtin__";
 type MemoryFormValue = string | boolean;
 
 const MEMORY_STATUS_LABEL: Record<MemoryProviderInfo["status"], string> = {
-  ready: "ready",
-  needs_config: "needs setup",
-  unavailable: "unavailable",
-  missing: "missing",
+  ready: "готов",
+  needs_config: "требуется настройка",
+  unavailable: "недоступен",
+  missing: "не установлен",
 };
 
 const MEMORY_STATUS_TONE: Record<MemoryProviderInfo["status"], "success" | "warning" | "destructive" | "secondary"> = {
@@ -94,8 +94,8 @@ function SetupCommandBlock({ code, label }: { code: string; label: string }) {
 }
 
 function setupResultLabel(status: string) {
-  if (status === "already_installed") return "already installed";
-  if (status === "no_declared_steps") return "no declared setup";
+  if (status === "already_installed") return "уже установлено";
+  if (status === "no_declared_steps") return "настройка не предусмотрена";
   return status.replace(/_/g, " ");
 }
 
@@ -113,7 +113,7 @@ function MemoryProviderSetupResults({ results }: { results: MemoryProviderSetupR
 
   return (
     <div className="grid gap-2 border border-border bg-background/20 p-3">
-      <p className="text-muted-foreground">Setup results</p>
+      <p className="text-muted-foreground">Результаты настройки</p>
       {results.map((result, index) => {
         const detail = result.stderr || result.stdout;
         return (
@@ -177,7 +177,9 @@ function MemoryProviderSetupHint({
   if (!hasDetails || !setup) {
     return (
       <p className="border border-destructive/50 px-3 py-2 text-xs text-destructive">
-        This provider is installed but unavailable. It may need local dependencies or a manual setup step before Hermes can activate it.
+        Этот провайдер установлен, но недоступен. Возможно, Hermes сможет
+        активировать его только после установки локальных зависимостей или
+        ручной настройки.
       </p>
     );
   }
@@ -191,8 +193,8 @@ function MemoryProviderSetupHint({
     >
       <p className={isBlocked ? "text-destructive" : "text-muted-foreground"}>
         {needsDependencySetup
-          ? "Finish these setup steps before Hermes can activate this provider."
-          : "Provider dependency setup completed."}
+          ? "Выполните эти шаги настройки, прежде чем Hermes сможет активировать провайдер."
+          : "Настройка зависимостей провайдера завершена."}
       </p>
 
       {needsDependencySetup ? (
@@ -204,14 +206,14 @@ function MemoryProviderSetupHint({
         >
           <span className="inline-flex items-center gap-2">
             {installing ? <Spinner /> : null}
-            {installing ? "Installing provider dependencies" : "Install provider dependencies"}
+            {installing ? "Установка зависимостей провайдера" : "Установить зависимости провайдера"}
           </span>
         </Button>
       ) : null}
 
       {installing ? (
         <div className="flex items-center gap-2 text-muted-foreground">
-          <Spinner /> Running provider setup. This may take a minute…
+          <Spinner /> Выполняется настройка провайдера. Это может занять минуту…
         </div>
       ) : null}
 
@@ -222,17 +224,17 @@ function MemoryProviderSetupHint({
           {setup.external_dependencies.map((dep, index) => (
             <div key={`${dep.name || "dependency"}-${index}`} className="grid gap-2">
               <p className="text-muted-foreground">
-                External dependency{dep.name ? `: ${dep.name}` : ""}
+                Внешняя зависимость{dep.name ? `: ${dep.name}` : ""}
               </p>
               {dep.install ? (
                 <SetupCommandBlock
-                  label={dep.name ? `Install ${dep.name}` : "Install dependency"}
+                  label={dep.name ? `Установить ${dep.name}` : "Установить зависимость"}
                   code={dep.install}
                 />
               ) : null}
               {dep.check ? (
                 <SetupCommandBlock
-                  label={dep.name ? `Verify ${dep.name}` : "Verify dependency"}
+                  label={dep.name ? `Проверить ${dep.name}` : "Проверить зависимость"}
                   code={dep.check}
                 />
               ) : null}
@@ -241,7 +243,7 @@ function MemoryProviderSetupHint({
 
           {setup.pip_dependencies.length ? (
             <div className="grid gap-2">
-              <p className="text-muted-foreground">Python dependencies</p>
+              <p className="text-muted-foreground">Зависимости Python</p>
               <div className="flex flex-wrap gap-2">
                 {setup.pip_dependencies.map((dep) => (
                   <code
@@ -260,7 +262,8 @@ function MemoryProviderSetupHint({
       {setup.required_env.length && needsDependencySetup ? (
         <div className="grid gap-2">
           <p className="text-muted-foreground">
-            Required environment values. Fill the matching fields below, or set them in the Hermes environment.
+            Обязательные значения окружения. Заполните соответствующие поля
+            ниже или задайте их в окружении Hermes.
           </p>
           <div className="flex flex-wrap gap-2">
             {setup.required_env.map((envKey) => (
@@ -352,7 +355,7 @@ export default function PluginsPage() {
           if (!cancelled) {
             setMemoryConfig(null);
             setMemoryValues({});
-            showToast(e instanceof Error ? e.message : "Failed to load provider config", "error");
+            showToast(e instanceof Error ? e.message : "Не удалось загрузить конфигурацию провайдера", "error");
           }
         })
         .finally(() => {
@@ -378,14 +381,14 @@ export default function PluginsPage() {
         force: installForce,
         enable: installEnable,
       });
-      showToast(`${r.plugin_name ?? id} installed`, "success");
+      showToast(`${r.plugin_name ?? id}: установлено`, "success");
       if ((r.warnings?.length ?? 0) > 0) showToast(r.warnings!.join(" "), "error");
       if ((r.missing_env?.length ?? 0) > 0)
         showToast(`${t.pluginsPage.missingEnvWarn} ${r.missing_env!.join(", ")}`, "error");
       setInstallId("");
       await loadHub();
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "Install failed", "error");
+      showToast(e instanceof Error ? e.message : "Ошибка установки", "error");
     } finally {
       setInstallBusy(false);
     }
@@ -401,7 +404,7 @@ export default function PluginsPage() {
       );
       await loadHub();
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "Rescan failed", "error");
+      showToast(e instanceof Error ? e.message : "Не удалось повторно просканировать", "error");
     } finally {
       setRescanBusy(false);
     }
@@ -441,7 +444,7 @@ export default function PluginsPage() {
       showToast(t.pluginsPage.savedProviders, "success");
       await loadHub();
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "Save failed", "error");
+      showToast(e instanceof Error ? e.message : "Ошибка сохранения", "error");
     } finally {
       setMemoryBusy(false);
     }
@@ -467,13 +470,13 @@ export default function PluginsPage() {
       const failed = result.results.filter((row) => row.status === "failed");
       if (failed.length) {
         const names = Array.from(new Set(failed.map((row) => row.name))).join(", ");
-        showToast(`Provider setup failed: ${names || provider}. See setup results below.`, "error");
+        showToast(`Не удалось настроить провайдер: ${names || provider}. Подробности приведены ниже.`, "error");
       } else {
-        showToast("Provider setup finished", "success");
+        showToast("Настройка провайдера завершена", "success");
       }
       await loadHub(provider);
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "Provider setup failed", "error");
+      showToast(e instanceof Error ? e.message : "Не удалось настроить провайдер", "error");
     } finally {
       setMemorySetupBusy(false);
     }
@@ -486,7 +489,7 @@ export default function PluginsPage() {
       showToast(t.pluginsPage.savedProviders, "success");
       await loadHub();
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "Save failed", "error");
+      showToast(e instanceof Error ? e.message : "Ошибка сохранения", "error");
     } finally {
       setContextBusy(false);
     }
@@ -498,7 +501,7 @@ export default function PluginsPage() {
       await fn();
       await loadHub();
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "Failed", "error");
+      showToast(e instanceof Error ? e.message : "Сбой", "error");
     } finally {
       setRowBusy(null);
     }
@@ -527,7 +530,7 @@ export default function PluginsPage() {
             <CardHeader>
               <CardTitle>{t.pluginsPage.providersHeading}</CardTitle>
               <p className="text-xs tracking-[0.08em] text-text-tertiary">
-                Configure memory providers and runtime context engine selection.
+                Настройте провайдеры памяти и выбор движка контекста во время работы.
               </p>
             </CardHeader>
 
@@ -543,10 +546,10 @@ export default function PluginsPage() {
                         </Badge>
                       )}
                       {selectedMemoryName && selectedMemoryName === providers.memory_provider && (
-                        <Badge tone="outline">active</Badge>
+                        <Badge tone="outline">активен</Badge>
                       )}
                       {!selectedMemoryName && !providers.memory_provider && (
-                        <Badge tone="success">active</Badge>
+                        <Badge tone="success">активен</Badge>
                       )}
                     </div>
 
@@ -570,13 +573,14 @@ export default function PluginsPage() {
 
                   {!selectedMemoryName && (
                     <p className="text-xs text-muted-foreground">
-                      Hermes will use the built-in MEMORY.md and USER.md files.
+                      Hermes будет использовать встроенные файлы MEMORY.md и USER.md.
                     </p>
                   )}
 
                   {activeMemoryInfo?.status === "missing" && (
                     <p className="border border-destructive/50 px-3 py-2 text-xs text-destructive">
-                      Active provider {providers.memory_provider} is no longer installed. Select another provider and save.
+                      Активный провайдер {providers.memory_provider} больше не
+                      установлен. Выберите другой провайдер и сохраните.
                     </p>
                   )}
 
@@ -597,19 +601,21 @@ export default function PluginsPage() {
 
                   {selectedMemoryName && selectedMemoryInfo?.status === "needs_config" && (
                     <p className="border border-warning/50 px-3 py-2 text-xs text-warning">
-                      Provider dependencies are installed. Add the required credentials or self-hosted URL below, then save the provider.
+                    Зависимости провайдера установлены. Добавьте ниже
+                    необходимые учётные данные или URL собственного сервера,
+                    затем сохраните провайдер.
                     </p>
                   )}
 
                   {selectedMemoryName && memoryConfigBusy && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Spinner /> Loading provider settings…
+                      <Spinner /> Загрузка настроек провайдера…
                     </div>
                   )}
 
                   {selectedMemoryName && !memoryConfigBusy && visibleMemoryFields.length === 0 && (
                     <p className="text-xs text-muted-foreground">
-                      This provider does not expose dashboard settings.
+                      Этот провайдер не предоставляет настроек в панели.
                     </p>
                   )}
 
@@ -622,9 +628,9 @@ export default function PluginsPage() {
                           <div key={field.key} className="grid gap-2 min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
                               <Label htmlFor={`memory-${field.key}`}>{field.label}</Label>
-                              {field.required && <Badge tone="outline">required</Badge>}
+                              {field.required && <Badge tone="outline">обязательно</Badge>}
                               {field.kind === "secret" && field.is_set && !value && (
-                                <Badge tone="success">set</Badge>
+                                <Badge tone="success">задано</Badge>
                               )}
                               {field.url && (
                                 <a
@@ -633,7 +639,7 @@ export default function PluginsPage() {
                                   rel="noreferrer"
                                   className="inline-flex items-center gap-1 text-xs underline"
                                 >
-                                  Open <ExternalLink className="h-3 w-3" />
+                                  Открыть <ExternalLink className="h-3 w-3" />
                                 </a>
                               )}
                             </div>
@@ -668,7 +674,7 @@ export default function PluginsPage() {
                                   value={String(value ?? "")}
                                   placeholder={
                                     field.kind === "secret" && field.is_set
-                                      ? "Leave blank to keep existing value"
+                                      ? "Оставьте пустым, чтобы сохранить текущее значение"
                                       : field.placeholder
                                   }
                                   onChange={(event) =>
@@ -682,7 +688,7 @@ export default function PluginsPage() {
                                   <Button
                                     ghost
                                     size="icon"
-                                    aria-label={secretIsVisible ? "Hide secret" : "Show secret"}
+                                    aria-label={secretIsVisible ? "Скрыть секрет" : "Показать секрет"}
                                     onClick={() =>
                                       setSecretVisible((current) => ({
                                         ...current,
@@ -716,7 +722,7 @@ export default function PluginsPage() {
                     onClick={() => void onSaveMemoryProvider()}
                     prefix={memoryBusy ? <Spinner /> : undefined}
                   >
-                    Save memory provider
+                    Сохранить провайдер памяти
                   </Button>
                 </div>
 
@@ -747,7 +753,7 @@ export default function PluginsPage() {
                     onClick={() => void onSaveContextEngine()}
                     prefix={contextBusy ? <Spinner /> : undefined}
                   >
-                    Save context engine
+                    Сохранить движок контекста
                   </Button>
                 </div>
               </div>
@@ -773,7 +779,7 @@ export default function PluginsPage() {
               <Input
                 className="font-mono-ui lowercase"
                 id="install-url"
-                placeholder="owner/repo, owner/repo/subdir, or https://..."
+                placeholder="владелец/репозиторий, владелец/репозиторий/каталог или https://..."
                 spellCheck={false}
                 value={installId}
                 onChange={(e) => setInstallId(e.target.value)}
@@ -1100,11 +1106,11 @@ function PluginRowCard(props: PluginRowCardProps) {
           setConfirmRemove(false);
           void setRuntimeLoading(row.name, async () => {
             await api.removeAgentPlugin(row.name);
-            showToast(`${row.name} removed`, "success");
+            showToast(`${row.name}: удалено`, "success");
           });
         }}
         title={t.pluginsPage.removeConfirm}
-        description={`This will remove the "${row.name}" plugin from your agent.`}
+        description={`Плагин «${row.name}» будет удалён из вашего агента.`}
         destructive
         confirmLabel={t.common.delete}
       />

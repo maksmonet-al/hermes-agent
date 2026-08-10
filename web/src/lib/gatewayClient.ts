@@ -28,9 +28,9 @@ export type { ConnectionState, GatewayEvent, GatewayEventName };
 export class GatewayClient extends JsonRpcGatewayClient {
   constructor() {
     super({
-      closedErrorMessage: "WebSocket closed",
-      connectErrorMessage: "WebSocket connection failed",
-      notConnectedErrorMessage: "gateway not connected",
+      closedErrorMessage: "Соединение WebSocket закрыто",
+      connectErrorMessage: "Не удалось подключиться по WebSocket",
+      notConnectedErrorMessage: "шлюз не подключён",
       requestIdPrefix: "w",
     });
   }
@@ -46,7 +46,7 @@ export class GatewayClient extends JsonRpcGatewayClient {
     const authParam = token ? (["token", token] as const) : await buildWsAuthParam();
     if (!authParam[1]) {
       throw new Error(
-        "Session token not available — page must be served by the Hermes dashboard server",
+        "Токен сессии недоступен — страница должна быть открыта через сервер панели Hermes",
       );
     }
 

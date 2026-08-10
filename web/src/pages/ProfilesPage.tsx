@@ -268,46 +268,46 @@ export default function ProfilesPage() {
   const L = useMemo(() => {
     const p = t.profiles;
     return {
-      activeProfile: p.activeProfile ?? "Active profile",
-      activeBadge: p.activeBadge ?? "active",
-      setActive: p.setActive ?? "Set as active",
-      activeSet: p.activeSet ?? "Active profile set",
-      gatewayRunning: p.gatewayRunning ?? "Gateway running",
-      gatewayStopped: p.gatewayStopped ?? "Gateway stopped",
+      activeProfile: p.activeProfile ?? "Активный профиль",
+      activeBadge: p.activeBadge ?? "активен",
+      setActive: p.setActive ?? "Сделать активным",
+      activeSet: p.activeSet ?? "Активный профиль выбран",
+      gatewayRunning: p.gatewayRunning ?? "Шлюз запущен",
+      gatewayStopped: p.gatewayStopped ?? "Шлюз остановлен",
       gatewayRunningWarning:
         p.gatewayRunningWarning ??
-        "This profile's gateway is running — it will be stopped.",
-      aliasBadge: p.aliasBadge ?? "alias",
-      description: p.description ?? "Description",
+        "Шлюз этого профиля запущен — он будет остановлен.",
+      aliasBadge: p.aliasBadge ?? "псевдоним",
+      description: p.description ?? "Описание",
       descriptionPlaceholder:
         p.descriptionPlaceholder ??
-        "What is this profile good at? Used to route kanban tasks by role.",
-      noDescription: p.noDescription ?? "No description",
-      editDescription: p.editDescription ?? "Edit description",
-      descriptionSaved: p.descriptionSaved ?? "Description saved",
-      reviewBadge: p.reviewBadge ?? "review",
-      autoGenerate: p.autoGenerate ?? "Auto-generate",
-      generating: p.generating ?? "Generating…",
-      describeFailed: p.describeFailed ?? "Could not generate description",
-      distribution: p.distribution ?? "Distribution",
-      advancedOptions: p.advancedOptions ?? "Advanced options",
+        "В чём специализация профиля? Используется для маршрутизации задач Kanban по ролям.",
+      noDescription: p.noDescription ?? "Нет описания",
+      editDescription: p.editDescription ?? "Изменить описание",
+      descriptionSaved: p.descriptionSaved ?? "Описание сохранено",
+      reviewBadge: p.reviewBadge ?? "проверка",
+      autoGenerate: p.autoGenerate ?? "Создать автоматически",
+      generating: p.generating ?? "Создание…",
+      describeFailed: p.describeFailed ?? "Не удалось создать описание",
+      distribution: p.distribution ?? "Дистрибутив",
+      advancedOptions: p.advancedOptions ?? "Расширенные настройки",
       cloneAll:
-        p.cloneAll ?? "Clone everything (memories, sessions, skills, state)",
-      noSkillsOption: p.noSkillsOption ?? "Don't seed bundled skills",
-      descriptionOptional: p.descriptionOptional ?? "Description (optional)",
-      modelOptional: p.modelOptional ?? "Model (optional)",
-      modelInherit: p.modelInherit ?? "Inherit from clone / default",
-      modelLoading: p.modelLoading ?? "Loading models…",
+        p.cloneAll ?? "Клонировать всё (память, сессии, навыки и состояние)",
+      noSkillsOption: p.noSkillsOption ?? "Не добавлять встроенные навыки",
+      descriptionOptional: p.descriptionOptional ?? "Описание (необязательно)",
+      modelOptional: p.modelOptional ?? "Модель (необязательно)",
+      modelInherit: p.modelInherit ?? "Унаследовать от клона / по умолчанию",
+      modelLoading: p.modelLoading ?? "Загрузка моделей…",
       modelNone:
-        p.modelNone ?? "No authenticated providers — set a key first",
-      editModel: p.editModel ?? "Change model",
-      modelSaved: p.modelSaved ?? "Model updated",
-      modelSelect: p.modelSelect ?? "Select a model",
-      actions: p.actions ?? "Actions",
-      manageSkills: p.manageSkills ?? "Manage skills & tools",
+        p.modelNone ?? "Нет авторизованных провайдеров — сначала укажите ключ",
+      editModel: p.editModel ?? "Сменить модель",
+      modelSaved: p.modelSaved ?? "Модель обновлена",
+      modelSelect: p.modelSelect ?? "Выбрать модель",
+      actions: p.actions ?? "Действия",
+      manageSkills: p.manageSkills ?? "Управление навыками и инструментами",
       activeSetHint:
         p.activeSetHint ??
-        "Dashboard switched to manage {name}. New CLI/gateway runs will use this profile too.",
+        "Панель переключена на управление профилем {name}. Новые запуски CLI и шлюза также будут использовать этот профиль.",
     };
   }, [t.profiles]);
 
@@ -449,7 +449,7 @@ export default function ProfilesPage() {
       showToast(`${t.profiles.created}: ${name}`, "success");
       if (picked && res.model_set === false) {
         showToast(
-          `Profile created, but the model could not be saved — set it from the profile editor.`,
+          `Профиль создан, но модель сохранить не удалось — задайте её в редакторе профиля.`,
           "error",
         );
       }
@@ -755,7 +755,7 @@ export default function ProfilesPage() {
           outlined
           onClick={() => navigate("/profiles/new")}
         >
-          Build
+          Конструктор
         </Button>
         <Button
           className="uppercase"
@@ -823,7 +823,7 @@ export default function ProfilesPage() {
               size="icon"
               onClick={() => setCreateModalOpen(false)}
               className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
-              aria-label="Close"
+              aria-label="Закрыть"
             >
               <X />
             </Button>
@@ -1248,7 +1248,7 @@ export default function ProfilesPage() {
               size="icon"
               onClick={closeEditor}
               className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
-              aria-label="Close"
+              aria-label="Закрыть"
             >
               <X />
             </Button>

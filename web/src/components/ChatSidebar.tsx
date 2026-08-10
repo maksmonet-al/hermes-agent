@@ -252,14 +252,14 @@ export function ChatSidebar({
       // `unmounting` suppresses the banner during cleanup — `ws.close()`
       // from the effect's return fires a close event with code 1005 that
       // would otherwise look like an unexpected drop.
-      const DISCONNECTED = "events feed disconnected — tool calls may not appear";
+      const DISCONNECTED = "лента событий отключена — вызовы инструментов могут не отображаться";
       const surface = (msg: string) => !unmounting && setError(msg);
 
       ws.addEventListener("error", () => surface(DISCONNECTED));
 
       ws.addEventListener("close", (ev) => {
         if (ev.code === 4401 || ev.code === 4403) {
-          surface(`events feed rejected (${ev.code}) — reload the page`);
+          surface(`лента событий отклонена (${ev.code}) — перезагрузите страницу`);
         } else if (ev.code !== 1000) {
           surface(DISCONNECTED);
         }
@@ -326,7 +326,7 @@ export function ChatSidebar({
       <Card className="flex items-center justify-between gap-2 px-3 py-2">
         <div className="min-w-0 flex-1">
           <div className="text-display text-xs tracking-wider text-text-tertiary">
-            model
+            модель
           </div>
 
           <Button
@@ -338,7 +338,7 @@ export function ChatSidebar({
               "self-start normal-case tracking-normal text-sm font-medium",
               "hover:underline disabled:no-underline",
             )}
-            title={modelName === "—" ? "switch model" : modelName}
+            title={modelName === "—" ? "сменить модель" : modelName}
           >
             <span className="flex min-w-0 max-w-full items-center gap-1">
               <span className="truncate">{modelLabel}</span>
@@ -361,7 +361,7 @@ export function ChatSidebar({
             refreshKey={modelRefreshKey}
             onChanged={(effort) =>
               setModelNotice(
-                `Reasoning effort set to ${effort}. Run /new or refresh the page to apply it to this chat.`,
+                `Уровень рассуждений изменён на ${effort}. Выполните /new или обновите страницу, чтобы применить его к этому чату.`,
               )
             }
           />
@@ -393,7 +393,7 @@ export function ChatSidebar({
                 onClick={reconnect}
                 prefix={<RefreshCw />}
               >
-                reconnect tools feed
+                переподключить ленту инструментов
               </Button>
             )}
           </div>
@@ -441,7 +441,7 @@ export function ChatSidebar({
           const m = pendingReloadModel;
           setPendingReloadModel(null);
           setModelNotice(
-            `Model set to ${m}. Run /new or refresh the page to apply it to this chat.`,
+            `Выбрана модель ${m}. Выполните /new или обновите страницу, чтобы применить её к этому чату.`,
           );
         }}
       />

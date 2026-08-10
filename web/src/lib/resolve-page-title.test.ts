@@ -32,11 +32,11 @@ describe("resolvePageTitle", () => {
   it("renders initialisms and literal labels correctly", () => {
     // Regression: the naive capitalize fallback produced "Mcp".
     expect(resolvePageTitle("/mcp", t, [])).toBe("MCP");
-    expect(resolvePageTitle("/system", t, [])).toBe("System");
-    expect(resolvePageTitle("/channels", t, [])).toBe("Channels");
-    expect(resolvePageTitle("/webhooks", t, [])).toBe("Webhooks");
-    expect(resolvePageTitle("/pairing", t, [])).toBe("Pairing");
-    expect(resolvePageTitle("/files", t, [])).toBe("Files");
+    expect(resolvePageTitle("/system", t, [])).toBe("Система");
+    expect(resolvePageTitle("/channels", t, [])).toBe("Каналы");
+    expect(resolvePageTitle("/webhooks", t, [])).toBe("Вебхуки");
+    expect(resolvePageTitle("/pairing", t, [])).toBe("Сопряжение");
+    expect(resolvePageTitle("/files", t, [])).toBe("Файлы");
   });
 
   it("prefers plugin tab labels", () => {

@@ -98,7 +98,7 @@ export function ModelPickerDialog(props: Props) {
     loader,
     onApply,
     onClose,
-    title = "Switch Model",
+    title = "Сменить модель",
     alwaysGlobal = false,
   } = props;
   const standalone = !!loader && !!onApply;
@@ -292,7 +292,7 @@ export function ModelPickerDialog(props: Props) {
             message:
               result.confirm_message ||
               result.warning ||
-              "This model has unusually high known pricing.",
+              "У этой модели необычно высокая известная стоимость.",
           });
           return;
         }
@@ -320,7 +320,7 @@ export function ModelPickerDialog(props: Props) {
             message:
               result.confirm_message ||
               result.warning ||
-              "This model has unusually high known pricing.",
+              "У этой модели необычно высокая известная стоимость.",
           });
           return;
         }
@@ -363,7 +363,7 @@ export function ModelPickerDialog(props: Props) {
           size="icon"
           onClick={onClose}
           className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
-          aria-label="Close"
+          aria-label="Закрыть"
         >
           <X />
         </Button>
@@ -376,7 +376,7 @@ export function ModelPickerDialog(props: Props) {
             {title}
           </h2>
           <p className="text-xs text-muted-foreground mt-1 font-mono">
-            current: {currentModel || "(unknown)"}
+            текущая: {currentModel || "(неизвестно)"}
             {currentProviderSlug && ` · ${currentProviderSlug}`}
           </p>
         </header>
@@ -386,7 +386,7 @@ export function ModelPickerDialog(props: Props) {
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               autoFocus
-              placeholder="Filter providers and models…"
+              placeholder="Фильтр провайдеров и моделей…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pl-7 h-8 text-sm"
@@ -431,7 +431,7 @@ export function ModelPickerDialog(props: Props) {
         <footer className="border-t border-border p-3 flex items-center justify-between gap-3 flex-wrap">
           {alwaysGlobal ? (
             <span className="text-xs text-muted-foreground">
-              Saves to config.yaml — applies to new sessions.
+              Сохраняется в config.yaml и применяется к новым сессиям.
             </span>
           ) : (
             <div className="flex items-center gap-2">
@@ -447,7 +447,7 @@ export function ModelPickerDialog(props: Props) {
                 className="font-mondwest normal-case tracking-normal text-xs text-muted-foreground cursor-pointer"
                 htmlFor="model-picker-persist-global"
               >
-                Persist globally (otherwise this session only)
+                Сохранить глобально (иначе — только для этой сессии)
               </Label>
             </div>
           )}
@@ -459,24 +459,24 @@ export function ModelPickerDialog(props: Props) {
               disabled={applying || loading || refreshing}
             >
               {refreshing ? <Spinner /> : <RefreshCw className="h-3.5 w-3.5" />}
-              Refresh Models
+              Обновить модели
             </Button>
             <Button outlined onClick={onClose} disabled={applying}>
-              Cancel
+              Отмена
             </Button>
             <Button onClick={confirm} disabled={!canConfirm}>
-              {applying ? <Spinner /> : "Switch"}
+              {applying ? <Spinner /> : "Переключить"}
             </Button>
           </div>
         </footer>
       </div>
       <ConfirmDialog
         open={!!pendingConfirm}
-        title="Expensive Model Warning"
+        title="Предупреждение о дорогой модели"
         description={pendingConfirm?.message}
         destructive
-        confirmLabel="Switch anyway"
-        cancelLabel="Cancel"
+        confirmLabel="Всё равно переключить"
+        cancelLabel="Отмена"
         loading={applying}
         onCancel={() => setPendingConfirm(null)}
         onConfirm={() => {
@@ -516,7 +516,7 @@ function ProviderColumn({
     <div className="border-r border-border overflow-y-auto">
       {loading && (
         <div className="flex items-center gap-2 p-4 text-xs text-muted-foreground">
-          <Spinner className="text-xs" /> loading…
+          <Spinner className="text-xs" /> загрузка…
         </div>
       )}
 
@@ -525,10 +525,10 @@ function ProviderColumn({
       {!loading && !error && providers.length === 0 && (
         <div className="p-4 text-xs text-muted-foreground italic">
           {query
-            ? "no matches"
+            ? "нет совпадений"
             : total === 0
-              ? "no authenticated providers"
-              : "no matches"}
+              ? "нет авторизованных провайдеров"
+              : "нет совпадений"}
         </div>
       )}
 
@@ -549,7 +549,7 @@ function ProviderColumn({
                 {p.is_current && <CurrentTag />}
               </div>
               <div className="text-xs text-text-secondary font-mono truncate">
-                {p.slug} · {p.total_models ?? p.models?.length ?? 0} models
+                {p.slug} · моделей: {p.total_models ?? p.models?.length ?? 0}
               </div>
             </div>
           </ListItem>
@@ -586,7 +586,7 @@ function ModelColumn({
     return (
       <div className="overflow-y-auto">
         <div className="p-4 text-xs text-muted-foreground italic">
-          pick a provider →
+          выберите провайдера →
         </div>
       </div>
     );
@@ -603,8 +603,8 @@ function ModelColumn({
       {models.length === 0 ? (
         <div className="p-4 text-xs text-muted-foreground italic">
           {allModels.length
-            ? "no models match your filter"
-            : "no models listed for this provider"}
+            ? "нет моделей, соответствующих фильтру"
+            : "для этого провайдера модели не указаны"}
         </div>
       ) : (
         models.map(({ model: m, positions }) => {
@@ -638,7 +638,7 @@ function ModelColumn({
 function CurrentTag() {
   return (
     <span className="text-display text-xs tracking-wider text-primary shrink-0">
-      current
+      текущая
     </span>
   );
 }

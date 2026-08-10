@@ -490,32 +490,33 @@ export default function AnalyticsPage() {
           <CardContent className="py-12">
             <div className="mx-auto flex max-w-2xl flex-col gap-3 text-sm text-muted-foreground">
               <h2 className="font-mondwest text-display text-base tracking-wider text-foreground">
-                Token analytics hidden
+                Аналитика токенов скрыта
               </h2>
               <p>
-                The token, cost, and per-day analytics on this page are a
-                local debug estimate. They only count successful main-agent
-                responses with a usable <span className="font-mono">usage</span>{" "}
-                block, and silently exclude auxiliary calls (context
-                compression, title generation, vision, session search, web
-                extract, smart approvals, MCP routing, plugin LLM access)
-                plus provider-side retries and fallback attempts. Cache
-                writes are missing entirely.
+                Аналитика токенов, стоимости и использования по дням на этой
+                странице является локальной отладочной оценкой. Учитываются
+                только успешные ответы основного агента с пригодным блоком{" "}
+                <span className="font-mono">usage</span>, а вспомогательные
+                вызовы (сжатие контекста, создание заголовков, обработка
+                изображений, поиск по сессиям, извлечение веб-страниц, умные
+                подтверждения, маршрутизация MCP, доступ плагинов к LLM),
+                повторы провайдера и резервные попытки не учитываются. Запись
+                кеша не учитывается вовсе.
               </p>
               <p>
-                On models with heavy auxiliary traffic (Kimi K2.6, MiniMax
-                M2.7) the local total can be 10x–100x lower than what your
-                provider bills. Hiding these numbers is safer than letting
-                them look authoritative.
+                Для моделей с большим объёмом вспомогательного трафика (Kimi
+                K2.6, MiniMax M2.7) локальная сумма может быть в 10–100 раз
+                меньше счёта провайдера. Поэтому безопаснее скрыть эти числа,
+                чтобы они не выглядели достоверными.
               </p>
               <p>
-                Check your provider dashboard (OpenRouter, Anthropic, etc.)
-                for actual usage and billing. To re-enable the local debug
-                estimate anyway, set{" "}
+                Фактическое использование и списания смотрите в панели
+                провайдера (OpenRouter, Anthropic и т. п.). Чтобы всё же
+                включить локальную отладочную оценку, задайте{" "}
                 <span className="font-mono">
                   dashboard.show_token_analytics: true
                 </span>{" "}
-                in <a href="/config" className="underline">Config</a>.
+                в разделе <a href="/config" className="underline">«Конфигурация»</a>.
               </p>
             </div>
           </CardContent>

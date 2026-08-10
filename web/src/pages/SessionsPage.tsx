@@ -130,7 +130,7 @@ function ToolCallBlock({
     <div className="mt-2 border border-warning/20 bg-warning/5">
       <ListItem
         onClick={() => setOpen(!open)}
-        aria-label={`${open ? t.common.collapse : t.common.expand} tool call ${toolCall.function.name}`}
+        aria-label={`${open ? t.common.collapse : t.common.expand} вызов инструмента ${toolCall.function.name}`}
         aria-expanded={open}
         className="px-3 py-2 text-xs text-warning hover:bg-warning/10 hover:text-warning"
       >
@@ -246,7 +246,7 @@ function MessageBubble({
     compaction: {
       bg: "bg-muted/50",
       text: "text-muted-foreground italic",
-      label: "Context handoff",
+      label: "Передача контекста",
     },
   };
 
@@ -462,8 +462,8 @@ function SessionRow({
         ghost
         size="icon"
         className="text-muted-foreground hover:text-foreground"
-        aria-label="Rename session"
-        title="Rename session"
+        aria-label="Переименовать сессию"
+        title="Переименовать сессию"
         onClick={(e) => {
           e.stopPropagation();
           setRenameValue(
@@ -481,8 +481,8 @@ function SessionRow({
         ghost
         size="icon"
         className="text-muted-foreground hover:text-foreground"
-        aria-label="Export session"
-        title="Export session JSON"
+        aria-label="Экспортировать сессию"
+        title="Экспортировать сессию в JSON"
         onClick={(e) => {
           e.stopPropagation();
           onExport(session.id);
@@ -564,7 +564,7 @@ function SessionRow({
                         if (e.key === "Enter") void submitRename();
                         else if (e.key === "Escape") setRenaming(false);
                       }}
-                      placeholder="Session title"
+                      placeholder="Название сессии"
                       className="h-7 min-w-0 flex-1 py-0 text-sm"
                       disabled={renameSaving}
                     />
@@ -572,8 +572,8 @@ function SessionRow({
                       ghost
                       size="icon"
                       className="text-muted-foreground hover:text-success"
-                      aria-label="Save title"
-                      title="Save title"
+                      aria-label="Сохранить название"
+                      title="Сохранить название"
                       disabled={renameSaving}
                       onClick={() => void submitRename()}
                     >
@@ -587,8 +587,8 @@ function SessionRow({
                       ghost
                       size="icon"
                       className="text-muted-foreground hover:text-foreground"
-                      aria-label="Cancel rename"
-                      title="Cancel rename"
+                      aria-label="Отменить переименование"
+                      title="Отменить переименование"
                       disabled={renameSaving}
                       onClick={() => setRenaming(false)}
                     >
@@ -813,7 +813,7 @@ export default function SessionsPage() {
         onClick={() => setPruneOpen(true)}
         prefix={<Archive />}
       >
-        Prune old sessions
+        Очистить старые сессии
       </Button>,
     );
     return () => {
@@ -855,13 +855,13 @@ export default function SessionsPage() {
         const text = await file.text();
         const importedSessions = parseImportSessions(text);
         const result = await api.importSessions(importedSessions);
-        showToast(`Import complete: ${importSummary(result)}`, "success");
+        showToast(`Импорт завершён: ${importSummary(result)}`, "success");
         clearSelection();
         loadSessions(page, true);
         loadStats();
         refreshEmptyCount();
       } catch (error) {
-        showToast(`Import failed: ${error}`, "error");
+        showToast(`Не удалось импортировать: ${error}`, "error");
       } finally {
         setImportingSessions(false);
         if (importInputRef.current) importInputRef.current.value = "";
@@ -1179,10 +1179,10 @@ export default function SessionsPage() {
         setOverviewSessions((prev) =>
           prev.map((s) => (s.id === id ? { ...s, title } : s)),
         );
-        showToast("Session renamed", "success");
+        showToast("Сессия переименована", "success");
         loadStats();
       } catch {
-        showToast("Failed to rename session", "error");
+        showToast("Не удалось переименовать сессию", "error");
       }
     },
     [showToast, loadStats],
@@ -1208,7 +1208,7 @@ export default function SessionsPage() {
         a.click();
         URL.revokeObjectURL(url);
       } catch {
-        showToast("Failed to export session", "error");
+        showToast("Не удалось экспортировать сессию", "error");
       }
     },
     [showToast],
@@ -1217,22 +1217,19 @@ export default function SessionsPage() {
   const handlePrune = useCallback(async () => {
     const days = parseInt(pruneDays, 10);
     if (!Number.isFinite(days) || days < 0) {
-      showToast("Enter a valid number of days", "error");
+      showToast("Введите корректное количество дней", "error");
       return;
     }
     setPruning(true);
     try {
       const resp = await api.pruneSessions(days);
-      showToast(
-        `Pruned ${resp.removed} session${resp.removed === 1 ? "" : "s"}`,
-        "success",
-      );
+      showToast(`Удалено архивных сессий: ${resp.removed}`, "success");
       setPruneOpen(false);
       loadSessions(0);
       setPage(0);
       loadStats();
     } catch {
-      showToast("Failed to prune sessions", "error");
+      showToast("Не удалось очистить сессии", "error");
     } finally {
       setPruning(false);
     }
@@ -1360,10 +1357,11 @@ export default function SessionsPage() {
       >
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Prune old sessions</DialogTitle>
+            <DialogTitle>Очистить старые сессии</DialogTitle>
             <DialogDescription>
-              Permanently remove archived sessions whose last activity is older
-              than the given number of days. Active sessions are never pruned.
+              Безвозвратно удалить архивные сессии, последняя активность
+              которых была раньше указанного числа дней назад. Активные сессии
+              не удаляются.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-1.5">
@@ -1371,7 +1369,7 @@ export default function SessionsPage() {
               htmlFor="prune-days"
               className="text-xs font-medium text-muted-foreground"
             >
-              Older than (days)
+              Старше (дней)
             </label>
             <Input
               id="prune-days"
@@ -1400,7 +1398,7 @@ export default function SessionsPage() {
               className="gap-1.5"
             >
               {pruning && <Spinner className="text-sm" />}
-              Prune
+              Очистить
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1412,25 +1410,25 @@ export default function SessionsPage() {
             <span className="text-lg font-semibold tabular-nums leading-none">
               {stats.total}
             </span>
-            <span className="text-xs text-muted-foreground">Total</span>
+            <span className="text-xs text-muted-foreground">Всего</span>
           </div>
           <div className="flex flex-col">
             <span className="text-lg font-semibold tabular-nums leading-none text-success">
               {stats.active_store}
             </span>
-            <span className="text-xs text-muted-foreground">Active in store</span>
+            <span className="text-xs text-muted-foreground">Активных в хранилище</span>
           </div>
           <div className="flex flex-col">
             <span className="text-lg font-semibold tabular-nums leading-none">
               {stats.archived}
             </span>
-            <span className="text-xs text-muted-foreground">Archived</span>
+            <span className="text-xs text-muted-foreground">В архиве</span>
           </div>
           <div className="flex flex-col">
             <span className="text-lg font-semibold tabular-nums leading-none">
               {stats.messages}
             </span>
-            <span className="text-xs text-muted-foreground">Messages</span>
+            <span className="text-xs text-muted-foreground">Сообщений</span>
           </div>
           {Object.keys(stats.by_source).length > 0 && (
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
@@ -1597,12 +1595,12 @@ export default function SessionsPage() {
                 className="shrink-0"
                 disabled={importingSessions}
                 onClick={() => importInputRef.current?.click()}
-                aria-label="Import exported sessions"
-                title="Import exported session JSON or JSONL"
+                aria-label="Импортировать экспортированные сессии"
+                title="Импортировать экспорт сессий JSON или JSONL"
                 prefix={importingSessions ? <Spinner /> : <Upload />}
               >
                 <span className="font-mondwest normal-case text-xs">
-                  Import sessions
+                  Импортировать сессии
                 </span>
               </Button>
             )}

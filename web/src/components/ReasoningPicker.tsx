@@ -106,7 +106,7 @@ export function ReasoningPicker({
     <div className="flex items-center gap-2 px-3 py-2 text-xs">
       <div className="flex items-center gap-1.5 text-text-tertiary">
         <Brain className="h-3.5 w-3.5" />
-        <span className="text-display tracking-wider">reasoning</span>
+        <span className="text-display tracking-wider">рассуждение</span>
       </div>
       <Select
         className="ml-auto min-w-0"

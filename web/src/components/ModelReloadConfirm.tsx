@@ -27,12 +27,12 @@ export function ModelReloadConfirm({
   return (
     <ConfirmDialog
       open={model !== null}
-      title="Switch model?"
+      title="Сменить модель?"
       description={
         description ??
-        `Switching to ${model ?? ""} starts a fresh chat. Your current chat stays in your Sessions list and the agent's memory is kept. Reload now to apply it?`
+        `При переключении на ${model ?? ""} начнётся новый чат. Текущий чат останется в списке сессий, а память агента сохранится. Перезагрузить сейчас, чтобы применить модель?`
       }
-      confirmLabel="Reload"
+      confirmLabel="Перезагрузить"
       onConfirm={() => window.location.reload()}
       onCancel={onCancel}
     />

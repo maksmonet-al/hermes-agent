@@ -836,6 +836,7 @@ class DockerEnvironment(BaseEnvironment):
         network: bool = True,
         host_cwd: str = None,
         auto_mount_cwd: bool = False,
+        workspace_mount_mode: str = "rw",
         run_as_host_user: bool = False,
         extra_args: list = None,
         persist_across_processes: bool = True,
@@ -908,14 +909,37 @@ class DockerEnvironment(BaseEnvironment):
                 logger.warning(f"Docker volume '{vol}' missing colon, skipping")
 
         host_cwd_abs = os.path.abspath(os.path.expanduser(host_cwd)) if host_cwd else ""
+        if workspace_mount_mode not in {"rw", "ro"}:
+            raise ValueError(f"Invalid Docker workspace mount mode: {workspace_mount_mode!r}")
         bind_host_cwd = (
             auto_mount_cwd
             and bool(host_cwd_abs)
             and os.path.isdir(host_cwd_abs)
             and not workspace_explicitly_mounted
         )
-        if auto_mount_cwd and host_cwd and not os.path.isdir(host_cwd_abs):
-            logger.debug(f"Skipping docker cwd mount: host_cwd is not a valid directory: {host_cwd}")
+        if auto_mount_cwd and not bind_host_cwd:
+            raise RuntimeError(
+                "Refusing Docker worker start: exact host workspace is unavailable "
+                "or /workspace was overridden by a configured volume"
+            )
+        if workspace_mount_mode == "ro" and bind_host_cwd:
+            manifest_path = os.path.join(host_cwd_abs, ".hermes-task-identity.json")
+            try:
+                with open(manifest_path, encoding="utf-8") as manifest_file:
+                    manifest = json.load(manifest_file)
+                expected_workspace = os.path.realpath(str(manifest["worktree"]))
+                actual_workspace = os.path.realpath(host_cwd_abs)
+                expected_head = str(manifest["head"])
+                actual_head = subprocess.run(
+                    ["git", "-C", host_cwd_abs, "rev-parse", "HEAD"],
+                    capture_output=True, text=True, check=True, timeout=5,
+                ).stdout.strip()
+                if expected_workspace != actual_workspace or expected_head != actual_head:
+                    raise RuntimeError("identity manifest workspace or Git HEAD mismatch")
+            except (OSError, KeyError, ValueError, subprocess.SubprocessError) as exc:
+                raise RuntimeError(
+                    f"Refusing read-only Docker reviewer start: invalid workspace identity: {exc}"
+                ) from exc
 
         self._workspace_dir: Optional[str] = None
         self._home_dir: Optional[str] = None
@@ -944,8 +968,11 @@ class DockerEnvironment(BaseEnvironment):
             ])
 
         if bind_host_cwd:
-            logger.info(f"Mounting configured host cwd to /workspace: {host_cwd_abs}")
-            volume_args = ["-v", f"{host_cwd_abs}:/workspace", *volume_args]
+            logger.info(
+                "Mounting configured host cwd to /workspace (%s): %s",
+                workspace_mount_mode, host_cwd_abs,
+            )
+            volume_args = ["-v", f"{host_cwd_abs}:/workspace:{workspace_mount_mode}", *volume_args]
         elif workspace_explicitly_mounted:
             logger.debug("Skipping docker cwd mount: /workspace already mounted by user config")
 

@@ -1200,6 +1200,12 @@ def _resolve_container_task_id(task_id: Optional[str]) -> str:
         "docker_image", "modal_image", "singularity_image",
         "daytona_image", "env_type",
     })
+    kanban_task_id = os.getenv("HERMES_KANBAN_TASK", "").strip()
+    if kanban_task_id:
+        # Kanban workers are separate processes with an explicit workspace
+        # contract. Never collapse them into the generic "default" container:
+        # doing so can reuse a container mounted for another task/workspace.
+        return kanban_task_id
     if task_id and task_id in _task_env_overrides:
         overrides = _task_env_overrides[task_id]
         if set(overrides.keys()) & _ISOLATION_KEYS:
@@ -1427,6 +1433,7 @@ def _get_env_config() -> Dict[str, Any]:
         "cwd": cwd,
         "host_cwd": host_cwd,
         "docker_mount_cwd_to_workspace": mount_docker_cwd,
+        "docker_workspace_mount_mode": os.getenv("TERMINAL_DOCKER_WORKSPACE_MOUNT_MODE", "rw"),
         "timeout": _parse_env_var("TERMINAL_TIMEOUT", "180"),
         "lifetime_seconds": _parse_env_var("TERMINAL_LIFETIME_SECONDS", "300"),
         # SSH-specific config
@@ -1532,6 +1539,7 @@ def _create_environment(env_type: str, image: str, cwd: str, timeout: int,
             volumes=volumes,
             host_cwd=host_cwd,
             auto_mount_cwd=cc.get("docker_mount_cwd_to_workspace", False),
+            workspace_mount_mode=cc.get("docker_workspace_mount_mode", "rw"),
             forward_env=docker_forward_env,
             env=docker_env,
             run_as_host_user=cc.get("docker_run_as_host_user", False),
@@ -2298,6 +2306,7 @@ def terminal_tool(
                                 "modal_mode": config.get("modal_mode", "auto"),
                                 "docker_volumes": config.get("docker_volumes", []),
                                 "docker_mount_cwd_to_workspace": config.get("docker_mount_cwd_to_workspace", False),
+                                "docker_workspace_mount_mode": config.get("docker_workspace_mount_mode", "rw"),
                                 "docker_forward_env": config.get("docker_forward_env", []),
                                 "docker_env": config.get("docker_env", {}),
                                 "docker_run_as_host_user": config.get("docker_run_as_host_user", False),

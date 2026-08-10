@@ -24,17 +24,17 @@ export async function completeMcpDashboardOAuth({
   // otherwise classify the later OAuth popup as unsolicited and block it.
   const authWindow = open("about:blank", "_blank") as Window | null;
   if (!authWindow) {
-    throw new Error("OAuth popup was blocked — allow popups for this dashboard and retry");
+    throw new Error("Всплывающее окно OAuth заблокировано — разрешите всплывающие окна для этой панели и повторите попытку");
   }
   authWindow.opener = null;
   let started: McpOAuthFlow;
   try {
     started = await start(serverName);
     if (started.status === "error") {
-      throw new Error(started.error || "OAuth failed to start");
+      throw new Error(started.error || "Не удалось запустить OAuth");
     }
     if (!started.authorization_url) {
-      throw new Error("OAuth server did not provide an authorization URL");
+      throw new Error("Сервер OAuth не предоставил URL авторизации");
     }
     authWindow.location.href = started.authorization_url;
   } catch (error) {
@@ -56,10 +56,10 @@ export async function completeMcpDashboardOAuth({
     }
     if (current.status === "approved") return current;
     if (current.status === "error") {
-      throw new Error(current.error || "OAuth authorization failed");
+      throw new Error(current.error || "Ошибка авторизации OAuth");
     }
     if (authWindow.closed) {
-      throw new Error("OAuth authorization window was closed before completion");
+      throw new Error("Окно авторизации OAuth было закрыто до завершения");
     }
     await sleep(1000);
   }

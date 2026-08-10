@@ -98,7 +98,7 @@ export default function McpPage() {
     return api
       .getMcpServers()
       .then((res) => setServers(res.servers))
-      .catch((e) => showToast(`Error: ${e}`, "error"));
+      .catch((e) => showToast(`Ошибка: ${e}`, "error"));
   }, [showToast]);
 
   const loadCatalog = useCallback(() => {
@@ -108,7 +108,7 @@ export default function McpPage() {
         setCatalog(res.entries);
         setDiagnostics(res.diagnostics);
       })
-      .catch((e) => showToast(`Error: ${e}`, "error"));
+      .catch((e) => showToast(`Ошибка: ${e}`, "error"));
   }, [showToast]);
 
   useEffect(() => {
@@ -132,7 +132,7 @@ export default function McpPage() {
       });
     } catch (error) {
       showToast(
-        error instanceof Error ? error.message : "Invalid MCP server",
+        error instanceof Error ? error.message : "Некорректный сервер MCP",
         "error",
       );
       return;
@@ -143,8 +143,8 @@ export default function McpPage() {
       await api.addMcpServer(body);
       showToast(
         transport === "http" && httpAuth === "oauth"
-          ? "Added — authenticate with OAuth"
-          : "Add ✓",
+          ? "Добавлено — выполните аутентификацию через OAuth"
+          : "Добавлено ✓",
         "success",
       );
       setName("");
@@ -158,7 +158,7 @@ export default function McpPage() {
       setCreateModalOpen(false);
       loadServers();
     } catch (e) {
-      showToast(`Failed to add: ${e}`, "error");
+      showToast(`Не удалось добавить: ${e}`, "error");
     } finally {
       setCreating(false);
     }
@@ -170,12 +170,12 @@ export default function McpPage() {
       const result = await api.testMcpServer(server.name);
       setTestResults((prev) => ({ ...prev, [server.name]: result }));
       if (result.ok) {
-        showToast(`${server.name}: ${result.tools.length} tool(s)`, "success");
+        showToast(`${server.name}: инструментов — ${result.tools.length}`, "success");
       } else {
-        showToast(`${server.name}: ${result.error ?? "Failed"}`, "error");
+        showToast(`${server.name}: ${result.error ?? "Сбой"}`, "error");
       }
     } catch (e) {
-      showToast(`Error: ${e}`, "error");
+      showToast(`Ошибка: ${e}`, "error");
     } finally {
       setTesting(null);
     }
@@ -194,9 +194,9 @@ export default function McpPage() {
         ...prev,
         [server.name]: { ok: true, tools: result.tools ?? [] },
       }));
-      showToast(`${server.name}: OAuth authentication complete`, "success");
+      showToast(`${server.name}: аутентификация OAuth завершена`, "success");
     } catch (e) {
-      showToast(`OAuth error: ${e}`, "error");
+      showToast(`Ошибка OAuth: ${e}`, "error");
     } finally {
       setAuthenticating(null);
     }
@@ -211,10 +211,10 @@ export default function McpPage() {
         prev.map((s) => (s.name === server.name ? { ...s, enabled: next } : s)),
       );
       setRestartNote(
-        "Enable/disable takes effect on the next gateway restart.",
+        "Включение или отключение вступит в силу после следующего перезапуска шлюза.",
       );
     } catch (e) {
-      showToast(`Error: ${e}`, "error");
+      showToast(`Ошибка: ${e}`, "error");
     } finally {
       setTogglingName(null);
     }
@@ -225,7 +225,7 @@ export default function McpPage() {
       async (serverName: string) => {
         try {
           await api.removeMcpServer(serverName);
-          showToast(`Delete: "${truncateText(serverName, 30)}"`, "success");
+          showToast(`Удалено: «${truncateText(serverName, 30)}»`, "success");
           setTestResults((prev) => {
             const next = { ...prev };
             delete next[serverName];
@@ -233,7 +233,7 @@ export default function McpPage() {
           });
           loadServers();
         } catch (e) {
-          showToast(`Error: ${e}`, "error");
+          showToast(`Ошибка: ${e}`, "error");
           throw e;
         }
       },
@@ -248,15 +248,15 @@ export default function McpPage() {
       try {
         const res = await api.installMcpCatalogEntry(entry.name, envMap, true);
         if (res.background) {
-          showToast("Installing in background…", "success");
+          showToast("Установка в фоне…", "success");
         } else {
-          showToast(`Installed: "${truncateText(entry.name, 30)}"`, "success");
+          showToast(`Установлено: «${truncateText(entry.name, 30)}»`, "success");
         }
         setInstallEntry(null);
         setInstallEnv({});
         await Promise.all([loadServers(), loadCatalog()]);
       } catch (e) {
-        showToast(`Failed to install: ${e}`, "error");
+        showToast(`Не удалось установить: ${e}`, "error");
       } finally {
         setInstallingName(null);
       }
@@ -283,7 +283,7 @@ export default function McpPage() {
       (item) => item.required && !(installEnv[item.name] ?? "").trim(),
     );
     if (missing.length > 0) {
-      showToast(`${missing[0].prompt} required`, "error");
+      showToast(`Обязательное поле: ${missing[0].prompt}`, "error");
       return;
     }
     const envMap: Record<string, string> = {};
@@ -301,7 +301,7 @@ export default function McpPage() {
         size="sm"
         onClick={() => setCreateModalOpen(true)}
       >
-        Add Server
+        Добавить сервер
       </Button>,
     );
     return () => {
@@ -330,11 +330,11 @@ export default function McpPage() {
         open={serverDelete.isOpen}
         onCancel={serverDelete.cancel}
         onConfirm={serverDelete.confirm}
-        title="Remove MCP server"
+        title="Удалить MCP-сервер"
         description={
           serverDelete.pendingId
-            ? `"${truncateText(serverDelete.pendingId, 40)}" — this will remove the server.`
-            : "This will remove the server."
+            ? `«${truncateText(serverDelete.pendingId, 40)}» — сервер будет удалён.`
+            : "Сервер будет удалён."
         }
         loading={serverDelete.isDeleting}
       />
@@ -360,7 +360,7 @@ export default function McpPage() {
               size="icon"
               onClick={closeCreateModal}
               className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
-              aria-label="Close"
+              aria-label="Закрыть"
             >
               <X />
             </Button>
@@ -370,13 +370,13 @@ export default function McpPage() {
                 id="create-mcp-title"
                 className="font-mondwest text-display text-base tracking-wider"
               >
-                Add MCP server
+                Добавить MCP-сервер
               </h2>
             </header>
 
             <div className="p-5 grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="mcp-name">Name</Label>
+                <Label htmlFor="mcp-name">Имя</Label>
                 <Input
                   id="mcp-name"
                   autoFocus
@@ -387,7 +387,7 @@ export default function McpPage() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="mcp-transport">Transport</Label>
+                <Label htmlFor="mcp-transport">Транспорт</Label>
                 <Select
                   id="mcp-transport"
                   value={transport}
@@ -414,7 +414,7 @@ export default function McpPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="mcp-auth">Authentication</Label>
+                    <Label htmlFor="mcp-auth">Аутентификация</Label>
                     <Select
                       id="mcp-auth"
                       value={httpAuth}
@@ -424,40 +424,39 @@ export default function McpPage() {
                         if (nextAuth !== "header") setBearerToken("");
                       }}
                     >
-                      <SelectOption value="none">None</SelectOption>
-                      <SelectOption value="header">Bearer token</SelectOption>
+                      <SelectOption value="none">Нет</SelectOption>
+                      <SelectOption value="header">Bearer-токен</SelectOption>
                       <SelectOption value="oauth">OAuth</SelectOption>
                     </Select>
                   </div>
                   {httpAuth === "header" && (
                     <div className="grid gap-2">
-                      <Label htmlFor="mcp-bearer-token">Bearer token</Label>
+                      <Label htmlFor="mcp-bearer-token">Bearer-токен</Label>
                       <Input
                         id="mcp-bearer-token"
                         type="password"
                         autoComplete="new-password"
-                        placeholder="Token or Bearer token"
+                        placeholder="Токен или Bearer-токен"
                         value={bearerToken}
                         onChange={(e) => setBearerToken(e.target.value)}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Stored in this profile&apos;s .env; config.yaml keeps
-                        only an environment-variable reference.
+                        Хранится в .env этого профиля; в config.yaml сохраняется
+                        только ссылка на переменную окружения.
                       </p>
                     </div>
                   )}
                   {httpAuth === "oauth" && (
                     <p className="text-xs text-muted-foreground">
-                      Add the server, then use Authenticate. Hermes opens the
-                      OAuth browser on the machine running the Dashboard
-                      backend.
+                      Добавьте сервер, затем нажмите «Аутентифицироваться». Hermes откроет
+                      браузер OAuth на компьютере, где запущена серверная часть панели управления.
                     </p>
                   )}
                 </>
               ) : (
                 <>
                   <div className="grid gap-2">
-                    <Label htmlFor="mcp-command">Command</Label>
+                    <Label htmlFor="mcp-command">Команда</Label>
                     <Input
                       id="mcp-command"
                       placeholder="npx"
@@ -466,7 +465,7 @@ export default function McpPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="mcp-args">Args</Label>
+                    <Label htmlFor="mcp-args">Аргументы</Label>
                     <Input
                       id="mcp-args"
                       placeholder="-y @modelcontextprotocol/server-foo"
@@ -476,7 +475,7 @@ export default function McpPage() {
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="mcp-env">
-                      Environment (KEY=VALUE per line)
+                      Переменные окружения (по одной KEY=VALUE на строку)
                     </Label>
                     <textarea
                       id="mcp-env"
@@ -497,7 +496,7 @@ export default function McpPage() {
                   disabled={creating}
                   prefix={creating ? <Spinner /> : undefined}
                 >
-                  {creating ? "Adding..." : "Add"}
+                  {creating ? "Добавление…" : "Добавить"}
                 </Button>
               </div>
             </div>
@@ -526,7 +525,7 @@ export default function McpPage() {
               size="icon"
               onClick={() => setInstallEntry(null)}
               className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
-              aria-label="Close"
+              aria-label="Закрыть"
             >
               <X />
             </Button>
@@ -536,13 +535,13 @@ export default function McpPage() {
                 id="install-mcp-title"
                 className="font-mondwest text-display text-base tracking-wider"
               >
-                Install {installEntry.name}
+                Установить {installEntry.name}
               </h2>
             </header>
 
             <div className="p-5 grid gap-4">
               <p className="text-xs text-muted-foreground">
-                This MCP requires the following values to be configured.
+                Для этого MCP необходимо настроить следующие значения.
               </p>
               {installEntry.required_env.map((item) => (
                 <div className="grid gap-2" key={item.name}>
@@ -578,8 +577,8 @@ export default function McpPage() {
                   }
                 >
                   {installingName === installEntry.name
-                    ? "Installing..."
-                    : "Install"}
+                    ? "Установка…"
+                    : "Установить"}
                 </Button>
               </div>
             </div>
@@ -595,7 +594,7 @@ export default function McpPage() {
             className="flex items-center gap-2 text-muted-foreground"
           >
             <Server className="h-4 w-4" />
-            Your MCP servers ({servers.length})
+            Ваши MCP-серверы ({servers.length})
           </H2>
         </div>
 
@@ -604,7 +603,7 @@ export default function McpPage() {
         {servers.length === 0 && (
           <Card>
             <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              No MCP servers configured.
+              MCP-серверы не настроены.
             </CardContent>
           </Card>
         )}
@@ -633,11 +632,11 @@ export default function McpPage() {
                     </Badge>
                     {server.auth && (
                       <Badge tone="outline">
-                        auth:{" "}
+                        аутентификация:{" "}
                         {server.auth === "header" ? "bearer" : server.auth}
                       </Badge>
                     )}
-                    {!server.enabled && <Badge tone="outline">disabled</Badge>}
+                    {!server.enabled && <Badge tone="outline">отключён</Badge>}
                   </div>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     {server.transport === "http" ? (
@@ -653,7 +652,7 @@ export default function McpPage() {
                     )}
                     {envCount > 0 && (
                       <span>
-                        {envCount} env var{envCount === 1 ? "" : "s"}
+                        Переменных окружения: {envCount}
                       </span>
                     )}
                   </div>
@@ -662,14 +661,14 @@ export default function McpPage() {
                       {result.ok ? (
                         <p className="text-success">
                           {result.tools.length === 0
-                            ? "Connected — no tools"
-                            : `Tools: ${result.tools
+                            ? "Подключено — инструменты отсутствуют"
+                            : `Инструменты: ${result.tools
                                 .map((tool) => tool.name)
                                 .join(", ")}`}
                         </p>
                       ) : (
                         <p className="text-destructive">
-                          {result.error ?? "Connection failed"}
+                          {result.error ?? "Не удалось подключиться"}
                         </p>
                       )}
                     </div>
@@ -681,7 +680,7 @@ export default function McpPage() {
                     <Button
                       ghost
                       size="sm"
-                      title="Authenticate with OAuth"
+                      title="Войти через OAuth"
                       onClick={() => handleAuthenticate(server)}
                       disabled={authenticating === server.name}
                       prefix={
@@ -692,15 +691,15 @@ export default function McpPage() {
                         )
                       }
                     >
-                      Authenticate
+                      Аутентифицироваться
                     </Button>
                   )}
 
                   <Button
                     ghost
                     size="sm"
-                    title={server.enabled ? "Disable" : "Enable"}
-                    aria-label={server.enabled ? "Disable" : "Enable"}
+                    title={server.enabled ? "Отключить" : "Включить"}
+                    aria-label={server.enabled ? "Отключить" : "Включить"}
                     onClick={() => handleToggleEnabled(server)}
                     disabled={togglingName === server.name}
                     prefix={
@@ -708,14 +707,14 @@ export default function McpPage() {
                     }
                     className={server.enabled ? "text-success" : undefined}
                   >
-                    {server.enabled ? "Disable" : "Enable"}
+                    {server.enabled ? "Отключить" : "Включить"}
                   </Button>
 
                   <Button
                     ghost
                     size="icon"
-                    title="Test connection"
-                    aria-label="Test connection"
+                    title="Проверить подключение"
+                    aria-label="Проверить подключение"
                     onClick={() => handleTest(server)}
                     disabled={testing === server.name}
                   >
@@ -726,8 +725,8 @@ export default function McpPage() {
                     ghost
                     destructive
                     size="icon"
-                    title="Delete"
-                    aria-label="Delete"
+                    title="Удалить"
+                    aria-label="Удалить"
                     onClick={() => serverDelete.requestDelete(server.name)}
                   >
                     <Trash2 />
@@ -747,18 +746,18 @@ export default function McpPage() {
             className="flex items-center gap-2 text-muted-foreground"
           >
             <Package className="h-4 w-4" />
-            Catalog ({catalog.length})
+            Каталог ({catalog.length})
           </H2>
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Browse Nous-approved MCP servers and install them with one click.
+          Просматривайте одобренные Nous MCP-серверы и устанавливайте их одним нажатием.
         </p>
 
         {catalog.length === 0 && (
           <Card>
             <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              No catalog entries available.
+              В каталоге нет доступных записей.
             </CardContent>
           </Card>
         )}
@@ -780,7 +779,7 @@ export default function McpPage() {
                     >
                       {entry.transport}
                     </Badge>
-                    <Badge tone="outline">auth: {entry.auth_type}</Badge>
+                    <Badge tone="outline">аутентификация: {entry.auth_type}</Badge>
                     {isHttpUrl(entry.source) ? (
                       <a
                         href={entry.source}
@@ -788,16 +787,16 @@ export default function McpPage() {
                         rel="noopener noreferrer"
                         className="text-xs text-primary underline underline-offset-2 hover:opacity-80"
                       >
-                        source ↗
+                        источник ↗
                       </a>
                     ) : (
                       entry.source && (
                         <Badge tone="outline">{entry.source}</Badge>
                       )
                     )}
-                    {entry.installed && <Badge tone="success">Installed</Badge>}
+                    {entry.installed && <Badge tone="success">Установлен</Badge>}
                     {entry.installed && !entry.enabled && (
-                      <Badge tone="outline">disabled</Badge>
+                      <Badge tone="outline">отключён</Badge>
                     )}
                   </div>
                   {entry.description && (
@@ -808,13 +807,13 @@ export default function McpPage() {
                   {/* Connection detail: what the agent actually talks to. */}
                   {entry.transport === "http" && entry.url && (
                     <p className="mt-1 text-xs text-muted-foreground">
-                      <span className="font-medium">Endpoint:</span>{" "}
+                      <span className="font-medium">Конечная точка:</span>{" "}
                       <code className="font-mono">{entry.url}</code>
                     </p>
                   )}
                   {entry.transport === "stdio" && entry.command && (
                     <p className="mt-1 text-xs text-muted-foreground break-all">
-                      <span className="font-medium">Runs:</span>{" "}
+                      <span className="font-medium">Запуск:</span>{" "}
                       <code className="font-mono">
                         {[entry.command, ...entry.args].join(" ")}
                       </code>
@@ -824,7 +823,7 @@ export default function McpPage() {
                       before they install (matches the docs trust model). */}
                   {entry.install_url && (
                     <p className="mt-1 text-xs text-muted-foreground break-all">
-                      <span className="font-medium">Installs from:</span>{" "}
+                      <span className="font-medium">Источник установки:</span>{" "}
                       {isHttpUrl(entry.install_url) ? (
                         <a
                           href={entry.install_url}
@@ -843,7 +842,7 @@ export default function McpPage() {
                   {entry.bootstrap.length > 0 && (
                     <details className="mt-1 text-xs text-muted-foreground">
                       <summary className="cursor-pointer select-none">
-                        Bootstrap commands ({entry.bootstrap.length})
+                        Команды начальной установки ({entry.bootstrap.length})
                       </summary>
                       <ul className="mt-1 ml-3 list-disc space-y-0.5">
                         {entry.bootstrap.map((cmd, i) => (
@@ -860,7 +859,7 @@ export default function McpPage() {
                   {entry.post_install && (
                     <details className="mt-1 text-xs text-muted-foreground">
                       <summary className="cursor-pointer select-none">
-                        Setup notes
+                        Примечания по настройке
                       </summary>
                       <p className="mt-1 whitespace-pre-wrap">
                         {entry.post_install.trim()}
@@ -879,7 +878,7 @@ export default function McpPage() {
 
                 <div className="flex items-center gap-1 shrink-0">
                   {entry.installed ? (
-                    <Badge tone="success">Installed</Badge>
+                    <Badge tone="success">Установлен</Badge>
                   ) : (
                     <Button
                       className="uppercase"
@@ -888,7 +887,7 @@ export default function McpPage() {
                       disabled={isInstalling}
                       prefix={isInstalling ? <Spinner /> : undefined}
                     >
-                      {isInstalling ? "Installing..." : "Install"}
+                      {isInstalling ? "Установка…" : "Установить"}
                     </Button>
                   )}
                 </div>

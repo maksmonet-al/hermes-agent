@@ -85,7 +85,7 @@ function getInitialLocale(): Locale {
   } catch {
     // SSR or privacy mode
   }
-  return "en";
+  return "ru";
 }
 
 interface I18nContextValue {
@@ -95,9 +95,9 @@ interface I18nContextValue {
 }
 
 const I18nContext = createContext<I18nContextValue>({
-  locale: "en",
+  locale: "ru",
   setLocale: () => {},
-  t: en,
+  t: ru,
 });
 
 export function I18nProvider({ children }: { children: ReactNode }) {

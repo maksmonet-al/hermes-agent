@@ -59,7 +59,7 @@ function NestedValueEditor({
       <div className="grid gap-2">
         {value.map((item, index) => (
           <div key={`${fieldKey}.${index}`} className="grid gap-1">
-            <Label className="text-xs text-muted-foreground">Item {index + 1}</Label>
+            <Label className="text-xs text-muted-foreground">Элемент {index + 1}</Label>
             <NestedValueEditor
               fieldKey={`${fieldKey}.${index}`}
               value={item}
@@ -122,7 +122,7 @@ export function AutoField({
         <Select value={String(value ?? "")} onValueChange={(v) => onChange(v)}>
           {options.map((opt) => (
             <SelectOption key={opt} value={opt}>
-              {opt || "(none)"}
+              {opt || "(нет)"}
             </SelectOption>
           ))}
         </Select>
@@ -183,7 +183,7 @@ export function AutoField({
                 .filter(Boolean),
             )
           }
-          placeholder="comma-separated values"
+          placeholder="значения через запятую"
         />
       </div>
     );

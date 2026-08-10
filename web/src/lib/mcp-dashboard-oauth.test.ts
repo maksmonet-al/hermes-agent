@@ -78,7 +78,7 @@ describe("completeMcpDashboardOAuth", () => {
         status: vi.fn(),
         open: vi.fn().mockReturnValue(null),
       }),
-    ).rejects.toThrow("popup was blocked");
+    ).rejects.toThrow("Всплывающее окно OAuth заблокировано");
     expect(start).not.toHaveBeenCalled();
   });
 
@@ -109,7 +109,7 @@ describe("completeMcpDashboardOAuth", () => {
         open: vi.fn().mockReturnValue(authWindow),
         sleep: async () => {},
       }),
-    ).rejects.toThrow("authorization window was closed");
+    ).rejects.toThrow("Окно авторизации OAuth было закрыто");
   });
 
   it("retries a transient status failure", async () => {

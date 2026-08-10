@@ -542,17 +542,80 @@ def telegram_bot_commands() -> list[tuple[str, str]]:
     Plugin-registered slash commands that require arguments are **excluded**
     because plugins may not provide a no-arg usage fallback.
     """
+    # Telegram menu localization.  Keep the slash command names unchanged;
+    # only the human-readable descriptions are translated.  The CLI and other
+    # gateway platforms continue using the canonical English registry text.
+    ru_descriptions = {
+        "start": "Подтвердить запуск платформы без ответа",
+        "new": "Начать новую сессию (новый ID и история)",
+        "topic": "Включить или проверить темы Telegram",
+        "retry": "Повторить последнее сообщение",
+        "undo": "Отменить последние сообщения и запросить заново",
+        "title": "Задать название текущей сессии",
+        "branch": "Создать ветку текущей сессии",
+        "compress": "Сжать контекст беседы",
+        "rollback": "Показать или восстановить контрольные точки",
+        "stop": "Остановить все фоновые процессы",
+        "approve": "Разрешить ожидающую опасную команду",
+        "deny": "Запретить ожидающую опасную команду",
+        "background": "Запустить запрос в фоне",
+        "agents": "Показать активных агентов и задачи",
+        "queue": "Поставить запрос в очередь на следующий ход",
+        "steer": "Передать сообщение после следующего шага инструмента",
+        "goal": "Задать постоянную цель для Hermes",
+        "moa": "Запустить запрос через Mixture of Agents",
+        "subgoal": "Добавить или изменить критерии активной цели",
+        "status": "Показать сессию, модель, токены и контекст",
+        "egress": "Показать статус прокси Docker",
+        "context": "Показать подробную информацию о контексте",
+        "whoami": "Показать ваши права доступа к командам",
+        "profile": "Показать активный профиль и домашнюю папку",
+        "sethome": "Назначить этот чат домашним каналом",
+        "resume": "Возобновить ранее названную сессию",
+        "sessions": "Просмотреть и возобновить прошлые сессии",
+        "model": "Переключить модель",
+        "codex_runtime": "Переключить режим Codex app-server",
+        "personality": "Выбрать готовую личность",
+        "diff": "Показать изменения Git в рабочей папке",
+        "footer": "Включить или выключить служебную информацию",
+        "yolo": "Включить или выключить режим без подтверждений",
+        "approvals": "Показать или изменить режим подтверждений",
+        "reasoning": "Настроить рассуждения и их отображение",
+        "fast": "Включить или выключить быстрый режим",
+        "voice": "Включить или выключить голосовой режим",
+        "memory": "Просмотреть записи памяти и режим подтверждения",
+        "bundles": "Показать наборы навыков",
+        "learn": "Создать многоразовый навык из описания",
+        "init": "Создать или обновить инструкции AGENTS.md",
+        "suggestions": "Просмотреть предложенные автоматизации",
+        "blueprint": "Настроить автоматизацию по шаблону",
+        "curator": "Фоновое обслуживание навыков",
+        "kanban": "Доска совместной работы профилей",
+        "reload_mcp": "Перезагрузить MCP-серверы из конфигурации",
+        "reload_skills": "Повторно просканировать навыки",
+        "commands": "Просмотреть все команды и навыки",
+        "help": "Показать доступные команды",
+        "restart": "Корректно перезапустить шлюз",
+        "usage": "Показать использование токенов и лимиты",
+        "topup": "Показать баланс и управление оплатой",
+        "insights": "Показать статистику использования",
+        "platform": "Управлять неисправной платформой шлюза",
+        "update": "Обновить Hermes Agent",
+        "version": "Показать версию Hermes Agent",
+        "debug": "Загрузить отчёт отладки и получить ссылки",
+    }
+
     overrides = _resolve_config_gates()
     result: list[tuple[str, str]] = []
     for cmd in COMMAND_REGISTRY:
         if not _is_gateway_available(cmd, overrides):
             continue
         # Built-in arg-taking commands are included — their handlers show
-        # usage text when invoked without arguments, and hiding them from
-        # the menu hurts discoverability (issue #24312).
+        # usage text when invoked without arguments, and hiding them from the
+        # menu hurts discoverability (issue #24312).
         tg_name = _sanitize_telegram_name(cmd.name)
         if tg_name:
-            result.append((tg_name, cmd.description))
+            result.append((tg_name, ru_descriptions.get(tg_name, cmd.description)))
     for name, description, args_hint in _iter_plugin_command_entries():
         if _requires_argument(args_hint):
             continue

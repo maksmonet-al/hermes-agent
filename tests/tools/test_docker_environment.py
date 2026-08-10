@@ -1,3 +1,4 @@
+import json
 import logging
 from io import StringIO
 import subprocess
@@ -49,6 +50,7 @@ def _make_dummy_env(**kwargs):
         network=kwargs.get("network", True),
         host_cwd=kwargs.get("host_cwd"),
         auto_mount_cwd=kwargs.get("auto_mount_cwd", False),
+        workspace_mount_mode=kwargs.get("workspace_mount_mode", "rw"),
         env=kwargs.get("env"),
         run_as_host_user=kwargs.get("run_as_host_user", False),
         extra_args=kwargs.get("extra_args", []),
@@ -145,6 +147,28 @@ def test_auto_mount_host_cwd_adds_volume(monkeypatch, tmp_path):
     assert f"{project_dir}:/workspace" in run_args_str
 
 
+def test_auto_mount_host_cwd_read_only_adds_ro_volume(monkeypatch, tmp_path):
+    """Reviewer-style host cwd mounts must be enforced read-only by Docker."""
+    project_dir = tmp_path / "review-worktree"
+    project_dir.mkdir()
+    (project_dir / ".hermes-task-identity.json").write_text(
+        json.dumps({"worktree": str(project_dir), "head": ""})
+    )
+    monkeypatch.setattr(docker_env, "find_docker", lambda: "/usr/bin/docker")
+    calls = _mock_subprocess_run(monkeypatch)
+
+    _make_dummy_env(
+        cwd="/workspace",
+        host_cwd=str(project_dir),
+        auto_mount_cwd=True,
+        workspace_mount_mode="ro",
+    )
+
+    run_calls = [c for c in calls if isinstance(c[0], list) and len(c[0]) >= 2 and c[0][1] == "run"]
+    assert run_calls
+    assert f"{project_dir}:/workspace:ro" in " ".join(run_calls[0][0])
+
+
 def test_auto_mount_disabled_by_default(monkeypatch, tmp_path):
     """Host cwd should not be mounted unless the caller explicitly opts in."""
     project_dir = tmp_path / "my-project"
@@ -165,28 +189,23 @@ def test_auto_mount_disabled_by_default(monkeypatch, tmp_path):
     assert f"{project_dir}:/workspace" not in run_args_str
 
 
-def test_auto_mount_skipped_when_workspace_already_mounted(monkeypatch, tmp_path):
-    """Explicit user volumes for /workspace should take precedence over cwd mount."""
+def test_auto_mount_rejects_workspace_override(monkeypatch, tmp_path):
+    """Task workspace auto-mount must fail closed rather than accept another source."""
     project_dir = tmp_path / "my-project"
     project_dir.mkdir()
     other_dir = tmp_path / "other"
     other_dir.mkdir()
 
     monkeypatch.setattr(docker_env, "find_docker", lambda: "/usr/bin/docker")
-    calls = _mock_subprocess_run(monkeypatch)
+    _mock_subprocess_run(monkeypatch)
 
-    _make_dummy_env(
-        cwd="/workspace",
-        host_cwd=str(project_dir),
-        auto_mount_cwd=True,
-        volumes=[f"{other_dir}:/workspace"],
-    )
-
-    run_calls = [c for c in calls if isinstance(c[0], list) and len(c[0]) >= 2 and c[0][1] == "run"]
-    assert run_calls, "docker run should have been called"
-    run_args_str = " ".join(run_calls[0][0])
-    assert f"{other_dir}:/workspace" in run_args_str
-    assert run_args_str.count(":/workspace") == 1
+    with pytest.raises(RuntimeError, match="exact host workspace"):
+        _make_dummy_env(
+            cwd="/workspace",
+            host_cwd=str(project_dir),
+            auto_mount_cwd=True,
+            volumes=[f"{other_dir}:/workspace"],
+        )
 
 
 def test_auto_mount_replaces_persistent_workspace_bind(monkeypatch, tmp_path):

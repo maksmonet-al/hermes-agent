@@ -18,14 +18,14 @@ function normalizeImportSessions(value: unknown): ImportableSession[] {
       !!item && typeof item === "object" && !Array.isArray(item),
   );
   if (sessions.length !== candidate.length) {
-    throw new Error("Expected exported session JSON or JSONL");
+    throw new Error("Ожидался экспорт сессии в формате JSON или JSONL");
   }
   return sessions;
 }
 
 export function parseImportSessions(text: string): ImportableSession[] {
   const trimmed = text.trim();
-  if (!trimmed) throw new Error("File is empty");
+  if (!trimmed) throw new Error("Файл пуст");
 
   try {
     return normalizeImportSessions(JSON.parse(trimmed));
@@ -37,10 +37,10 @@ export function parseImportSessions(text: string): ImportableSession[] {
 }
 
 export function importSummary(result: SessionImportResponse): string {
-  const parts = [`${result.imported} imported`];
-  if (result.skipped > 0) parts.push(`${result.skipped} skipped`);
+  const parts = [`импортировано: ${result.imported}`];
+  if (result.skipped > 0) parts.push(`пропущено: ${result.skipped}`);
   if (result.detached > 0) {
-    parts.push(`${result.detached} detached from missing parents`);
+    parts.push(`отсоединено из-за отсутствующих родительских сессий: ${result.detached}`);
   }
   return parts.join("; ");
 }

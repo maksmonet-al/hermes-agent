@@ -23,9 +23,9 @@ describe("parseImportSessions", () => {
   });
 
   it("rejects empty files and non-object entries", () => {
-    expect(() => parseImportSessions("  \n")).toThrow("File is empty");
+    expect(() => parseImportSessions("  \n")).toThrow("Файл пуст");
     expect(() => parseImportSessions('[{"id":"one"},42]')).toThrow(
-      "Expected exported session JSON or JSONL",
+      "Ожидался экспорт сессии в формате JSON или JSONL",
     );
   });
 });
@@ -42,6 +42,8 @@ describe("importSummary", () => {
         skipped_ids: ["existing"],
         errors: [],
       }),
-    ).toBe("2 imported; 1 skipped; 1 detached from missing parents");
+    ).toBe(
+      "импортировано: 2; пропущено: 1; отсоединено из-за отсутствующих родительских сессий: 1",
+    );
   });
 });

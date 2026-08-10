@@ -92,7 +92,7 @@ export function ChatSessionList({
       })
       .catch((e: Error) => {
         if (reqRef.current !== myReq) return;
-        setError(e.message || "failed to load sessions");
+        setError(e.message || "не удалось загрузить сессии");
       })
       .finally(() => {
         if (reqRef.current === myReq) setLoading(false);
@@ -202,7 +202,7 @@ export function ChatSessionList({
                 {s.message_count > 0 && (
                   <>
                     <span aria-hidden>·</span>
-                    <span>{s.message_count} msgs</span>
+                    <span>сообщений: {s.message_count}</span>
                   </>
                 )}
                 {s.source && s.source !== "cli" && (

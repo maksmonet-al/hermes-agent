@@ -22,7 +22,7 @@ export function ProfileScopeBanner() {
       <span>
         {(
           t.app.managingProfileBanner ??
-          "Managing profile “{name}” — config, keys, skills, MCPs, model, and new chats apply to that profile."
+          "Управление профилем «{name}» — конфигурация, ключи, навыки, MCP-серверы, модель и новые чаты относятся к этому профилю."
         ).replace("{name}", profile)}
       </span>
     </div>

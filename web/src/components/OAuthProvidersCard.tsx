@@ -39,11 +39,11 @@ function formatExpiresAt(
     const diff = dt.getTime() - now;
     if (diff < 0) return "expired";
     const mins = Math.floor(diff / 60_000);
-    if (mins < 60) return expiresInTemplate.replace("{time}", `${mins}m`);
+    if (mins < 60) return expiresInTemplate.replace("{time}", `${mins} мин`);
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return expiresInTemplate.replace("{time}", `${hours}h`);
+    if (hours < 24) return expiresInTemplate.replace("{time}", `${hours} ч`);
     const days = Math.floor(hours / 24);
-    return expiresInTemplate.replace("{time}", `${days}d`);
+    return expiresInTemplate.replace("{time}", `${days} дн`);
   } catch {
     return null;
   }
@@ -66,7 +66,7 @@ export function OAuthProvidersCard({ onError, onSuccess }: Props) {
     api
       .getOAuthProviders()
       .then((resp) => setProviders(resp.providers))
-      .catch((e) => onErrorRef.current?.(`Failed to load providers: ${e}`))
+      .catch((e) => onErrorRef.current?.(`Не удалось загрузить провайдеров: ${e}`))
       .finally(() => setLoading(false));
   }, []);
 
@@ -79,10 +79,10 @@ export function OAuthProvidersCard({ onError, onSuccess }: Props) {
     setDisconnectTarget(null);
     try {
       await api.disconnectOAuthProvider(provider.id);
-      onSuccess?.(`${provider.name} ${t.oauth.disconnect.toLowerCase()}ed`);
+      onSuccess?.(`${provider.name}: отключено`);
       refresh();
     } catch (e) {
-      onError?.(`${t.oauth.disconnect} failed: ${e}`);
+      onError?.(`Не удалось отключить ${provider.name}: ${e}`);
     } finally {
       setBusyId(null);
     }
@@ -175,7 +175,7 @@ export function OAuthProvidersCard({ onError, onSuccess }: Props) {
                     </div>
                     {p.status.logged_in && p.status.token_preview && (
                       <span className="truncate text-xs font-mono-ui text-text-secondary">
-                        <span className="text-text-tertiary">token </span>
+                        <span className="text-text-tertiary">токен </span>
                         {p.status.token_preview}
                         {p.status.source_label && (
                           <span className="text-text-tertiary">
@@ -220,7 +220,7 @@ export function OAuthProvidersCard({ onError, onSuccess }: Props) {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex"
-                      title={`Open ${p.name} docs`}
+                      title={`Открыть документацию ${p.name}`}
                     >
                       <Button ghost size="icon">
                         <ExternalLink />
@@ -278,7 +278,7 @@ export function OAuthProvidersCard({ onError, onSuccess }: Props) {
           if (disconnectTarget) void handleDisconnect(disconnectTarget);
         }}
         title={`${t.oauth.disconnect} ${disconnectTarget?.name ?? ""}?`}
-        description={`This will remove the stored OAuth tokens for ${disconnectTarget?.name ?? "this provider"}. You will need to re-authenticate to use it again.`}
+        description={`Сохранённые токены OAuth для ${disconnectTarget?.name ?? "этого провайдера"} будут удалены. Для дальнейшего использования потребуется повторная аутентификация.`}
         destructive
         confirmLabel={t.oauth.disconnect}
       />

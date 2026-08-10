@@ -157,7 +157,7 @@ export function HermesConsoleModal({ open, onClose }: HermesConsoleModalProps) {
       const pending = pendingCommandRef.current;
       if (pending) {
         const answer = line.toLowerCase();
-        if (answer === "y" || answer === "yes") {
+        if (["y", "yes", "д", "да"].includes(answer)) {
           pendingCommandRef.current = null;
           activeCommandRef.current = true;
           setConnectionState("running");
@@ -178,7 +178,7 @@ export function HermesConsoleModal({ open, onClose }: HermesConsoleModalProps) {
       setConnectionState("running");
       if (!sendFrame({ type: "input", line })) {
         activeCommandRef.current = false;
-        writeLine(term, "\x1b[31mConsole is not connected.\x1b[0m");
+        writeLine(term, "\x1b[31mКонсоль не подключена.\x1b[0m");
         showPrompt();
       }
     },
@@ -290,7 +290,7 @@ export function HermesConsoleModal({ open, onClose }: HermesConsoleModalProps) {
       }
 
       if (frame.type === "error") {
-        writeLine(term, `\x1b[31m${frame.message || "Command failed."}\x1b[0m`);
+        writeLine(term, `\x1b[31m${frame.message || "Не удалось выполнить команду."}\x1b[0m`);
         return;
       }
 
@@ -301,7 +301,7 @@ export function HermesConsoleModal({ open, onClose }: HermesConsoleModalProps) {
         if (frame.message) {
           writeLine(term, `\x1b[33m${frame.message}\x1b[0m`);
         }
-        inputPromptRef.current = "Confirm? [y/N] ";
+        inputPromptRef.current = "Подтвердить? [д/Н] ";
         lineRef.current = "";
         term.write(inputPromptRef.current);
         return;
@@ -317,10 +317,10 @@ export function HermesConsoleModal({ open, onClose }: HermesConsoleModalProps) {
           return;
         }
         if (frame.status === "timeout") {
-          writeLine(term, "\x1b[31mCommand timed out.\x1b[0m");
+          writeLine(term, "\x1b[31mВремя ожидания команды истекло.\x1b[0m");
         }
         if (frame.status === "cancelled") {
-          writeLine(term, "\x1b[33mCancelled.\x1b[0m");
+          writeLine(term, "\x1b[33mОтменено.\x1b[0m");
         }
         pendingCommandRef.current = null;
         setConnectionState("ready");
@@ -394,7 +394,7 @@ export function HermesConsoleModal({ open, onClose }: HermesConsoleModalProps) {
     setConnectionState("connecting");
     setConsoleProfile(profile || "current");
     hasReadyFrameRef.current = false;
-    writeLine(term, "\x1b[2mConnecting to Hermes Console...\x1b[0m");
+    writeLine(term, "\x1b[2mПодключение к консоли Hermes...\x1b[0m");
 
     void (async () => {
       try {
@@ -413,13 +413,13 @@ export function HermesConsoleModal({ open, onClose }: HermesConsoleModalProps) {
             const frame = JSON.parse(String(ev.data)) as ConsoleFrame;
             handleFrame(frame);
           } catch {
-            writeLine(term, "\x1b[31mMalformed console frame.\x1b[0m");
+            writeLine(term, "\x1b[31mНекорректный кадр консоли.\x1b[0m");
           }
         };
 
         ws.onerror = () => {
           setConnectionState("error");
-          writeLine(term, "\x1b[31mConsole websocket error.\x1b[0m");
+          writeLine(term, "\x1b[31mОшибка WebSocket консоли.\x1b[0m");
         };
 
         ws.onclose = (ev) => {
@@ -431,14 +431,14 @@ export function HermesConsoleModal({ open, onClose }: HermesConsoleModalProps) {
           const reason = ev.reason ? ` ${ev.reason}` : "";
           const message =
             ev.code === 1006 && !hasReadyFrameRef.current
-              ? "Console connection failed before the server handshake. Check that this dashboard is connected to a backend with /api/console."
-              : `Console closed (${ev.code}).${reason}`;
+              ? "Не удалось подключить консоль до рукопожатия с сервером. Убедитесь, что панель подключена к серверу с /api/console."
+              : `Консоль закрыта (${ev.code}).${reason}`;
           writeLine(term, `\x1b[31m${message}\x1b[0m`);
         };
       } catch (err) {
         if (cancelled) return;
         setConnectionState("error");
-        writeLine(term, `\x1b[31mConsole unavailable: ${err}\x1b[0m`);
+        writeLine(term, `\x1b[31mКонсоль недоступна: ${err}\x1b[0m`);
       }
     })();
 
@@ -503,7 +503,7 @@ export function HermesConsoleModal({ open, onClose }: HermesConsoleModalProps) {
               id="hermes-console-title"
               className="font-mondwest text-display text-base tracking-wider"
             >
-              Hermes Console
+              Консоль Hermes
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <Badge tone={statusTone}>{connectionState}</Badge>
@@ -515,7 +515,7 @@ export function HermesConsoleModal({ open, onClose }: HermesConsoleModalProps) {
             size="icon"
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground"
-            aria-label="Close console"
+            aria-label="Закрыть консоль"
           >
             <X />
           </Button>

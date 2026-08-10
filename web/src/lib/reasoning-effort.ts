@@ -15,14 +15,14 @@ export interface EffortOption {
 }
 
 export const EFFORT_OPTIONS: ReadonlyArray<EffortOption> = [
-  { value: "none", label: "Off (no thinking)" },
-  { value: "minimal", label: "Minimal" },
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "xhigh", label: "Extra High" },
-  { value: "max", label: "Max" },
-  { value: "ultra", label: "Ultra" },
+  { value: "none", label: "Отключено (без рассуждений)" },
+  { value: "minimal", label: "Минимальный" },
+  { value: "low", label: "Низкий" },
+  { value: "medium", label: "Средний" },
+  { value: "high", label: "Высокий" },
+  { value: "xhigh", label: "Очень высокий" },
+  { value: "max", label: "Максимальный" },
+  { value: "ultra", label: "Ультра" },
 ];
 
 export const VALID_EFFORTS: ReadonlySet<string> = new Set(

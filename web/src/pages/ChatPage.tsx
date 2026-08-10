@@ -182,7 +182,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
     typeof window !== "undefined" &&
     !window.__HERMES_SESSION_TOKEN__ &&
     !window.__HERMES_AUTH_REQUIRED__
-      ? "Session token unavailable. Open this page through `hermes dashboard`, not directly."
+      ? "Токен сессии недоступен. Откройте эту страницу через `hermes dashboard`, а не напрямую."
       : null,
   );
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
@@ -571,7 +571,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
     const reportImageUploadError = (err: unknown) => {
       const message = err instanceof Error ? err.message : String(err);
       console.warn("[dashboard chat] image upload failed:", message);
-      setBanner(`Image upload failed: ${message}`);
+      setBanner(`Не удалось загрузить изображение: ${message}`);
     };
     const driveImageAttach = async (paths: string[]) => {
       for (const path of paths) {
@@ -579,7 +579,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
         const ws = wsRef.current;
         if (!ws || ws.readyState !== WebSocket.OPEN) {
           setBanner(
-            "Image uploaded, but chat is not connected — try again.",
+            "Изображение загружено, но чат не подключён — повторите попытку.",
           );
           return;
         }
@@ -1015,8 +1015,8 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
         setPtyState("closed");
         setBanner(
           ev.reason
-            ? `Auth failed (${ev.reason}). Reload to refresh the session.`
-            : "Auth failed. Reload the page to refresh the session token.",
+            ? `Ошибка аутентификации (${ev.reason}). Перезагрузите страницу, чтобы обновить сессию.`
+            : "Ошибка авторизации. Перезагрузите страницу, чтобы обновить токен сессии.",
         );
         return;
       }
@@ -1025,8 +1025,8 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
         setPtyState("closed");
         setBanner(
           ev.reason
-            ? `Refused: ${ev.reason}.`
-            : "Refused: request host/origin doesn't match the dashboard.",
+            ? `Отклонено: ${ev.reason}.`
+            : "Запрос отклонён: хост или источник запроса не соответствует панели.",
         );
         return;
       }
@@ -1034,8 +1034,8 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
         setPtyState("closed");
         setBanner(
           ev.reason
-            ? `Chat websocket unavailable: ${ev.reason}.`
-            : "Chat websocket unavailable on this server.",
+            ? `WebSocket чата недоступен: ${ev.reason}.`
+            : "WebSocket чата недоступен на этом сервере.",
         );
         return;
       }
@@ -1043,8 +1043,8 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
         setPtyState("closed");
         setBanner(
           ev.reason
-            ? `Refused: ${ev.reason}.`
-            : "Refused: your client isn't permitted (server bound to localhost only).",
+            ? `Отклонено: ${ev.reason}.`
+            : "Запрос отклонён: клиенту запрещён доступ (сервер привязан только к localhost).",
         );
         return;
       }
@@ -1057,7 +1057,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
       //   4410 = the agent PROCESS exited (real end) → restart affordance.
       //   4409 = superseded by a newer tab attaching the same token → stay quiet.
       if (ev.code === 4410) {
-        term.write(`\r\n\x1b[90m[session ended]\x1b[0m\r\n`);
+        term.write(`\r\n\x1b[90m[сессия завершена]\x1b[0m\r\n`);
         setPtyState("ended");
         return;
       }
@@ -1077,7 +1077,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
       // restart affordance instead of leaving a dead terminal that only a
       // full page refresh could recover.
       term.write(
-        `\r\n\x1b[90m[session ended (code ${ev.code})]\x1b[0m\r\n`,
+        `\r\n\x1b[90m[сессия завершена (код ${ev.code})]\x1b[0m\r\n`,
       );
       setPtyState("ended");
     };
@@ -1311,8 +1311,8 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
   // descendants below those layers (see Toast.tsx).
   const reconnectBanner =
     ptyState === "reconnecting"
-      ? `Chat connection interrupted${
-          lastCloseCode ? ` (code ${lastCloseCode})` : ""
+      ? `Соединение с чатом прервано${
+          lastCloseCode ? ` (код ${lastCloseCode})` : ""
         }. Reconnecting...`
       : null;
   const visibleBanner = banner ?? reconnectBanner;
@@ -1436,17 +1436,17 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
               <div className="flex max-w-[min(28rem,calc(100vw-3rem))] flex-col items-start gap-2 border border-warning/60 bg-black/80 px-3 py-2 text-xs text-warning shadow-lg">
                 <div className="tracking-wide">
                   {ptyState === "reconnecting"
-                    ? "Chat is reconnecting."
-                    : "Chat disconnected."}
+                    ? "Чат переподключается."
+                    : "Чат отключён."}
                 </div>
                 <Button
                   size="sm"
                   outlined
                   onClick={reconnectPty}
                   prefix={<RotateCcw className="h-4 w-4" />}
-                  aria-label="Reconnect chat"
+                  aria-label="Переподключить чат"
                 >
-                  Reconnect now
+                  Переподключиться
                 </Button>
               </div>
             </div>
@@ -1458,14 +1458,14 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
           {ptyState === "ended" && (
             <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/60">
               <div className="text-sm tracking-wide text-white/80">
-                Session ended.
+                Сессия завершена.
               </div>
               <Button
                 onClick={startFreshPty}
                 prefix={<RotateCcw className="h-4 w-4" />}
-                aria-label="Start a new chat session"
+                aria-label="Начать новую сессию чата"
               >
-                Start new session
+                Начать новую сессию
               </Button>
             </div>
           )}
@@ -1473,8 +1473,8 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
           <Button
             ghost
             onClick={handleCopyLast}
-            title="Copy last assistant response as raw markdown"
-            aria-label="Copy last assistant response"
+            title="Копировать последний ответ ассистента как исходный Markdown"
+            aria-label="Копировать последний ответ ассистента"
             className={cn(
               "absolute z-10",
               "normal-case tracking-normal font-normal",
@@ -1490,7 +1490,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
             <span className="inline-flex items-center gap-1.5">
               <Copy className="h-3 w-3 shrink-0" />
               <span className="hidden min-[400px]:inline tracking-wide">
-                {copyState === "copied" ? "copied" : "copy last response"}
+                {copyState === "copied" ? "скопировано" : "копировать последний ответ"}
               </span>
             </span>
           </Button>

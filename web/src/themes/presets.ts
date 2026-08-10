@@ -40,8 +40,8 @@ const DEFAULT_LAYOUT: ThemeLayout = {
 
 export const defaultTheme: DashboardTheme = {
   name: "default",
-  label: "Hermes Teal",
-  description: "Classic dark teal — the canonical Hermes look",
+  label: "Hermes Бирюзовая",
+  description: "Классическая тёмно-бирюзовая тема Hermes",
   palette: {
     background: { hex: "#041c1c", alpha: 1 },
     midground: { hex: "#ffe6cb", alpha: 1 },
@@ -56,8 +56,8 @@ export const defaultTheme: DashboardTheme = {
 
 export const midnightTheme: DashboardTheme = {
   name: "midnight",
-  label: "Midnight",
-  description: "Deep blue-violet with cool accents",
+  label: "Полночь",
+  description: "Глубокая сине-фиолетовая тема с холодными акцентами",
   palette: {
     background: { hex: "#0a0a1f", alpha: 1 },
     midground: { hex: "#d4c8ff", alpha: 1 },
@@ -81,8 +81,8 @@ export const midnightTheme: DashboardTheme = {
 
 export const emberTheme: DashboardTheme = {
   name: "ember",
-  label: "Ember",
-  description: "Warm crimson and bronze — forge vibes",
+  label: "Угли",
+  description: "Тёплые багряные и бронзовые тона кузницы",
   palette: {
     background: { hex: "#1a0a06", alpha: 1 },
     midground: { hex: "#ffd8b0", alpha: 1 },
@@ -109,8 +109,8 @@ export const emberTheme: DashboardTheme = {
 
 export const monoTheme: DashboardTheme = {
   name: "mono",
-  label: "Mono",
-  description: "Clean grayscale — minimal and focused",
+  label: "Моно",
+  description: "Чистая шкала серого — минимализм и концентрация",
   palette: {
     background: { hex: "#0e0e0e", alpha: 1 },
     midground: { hex: "#eaeaea", alpha: 1 },
@@ -133,8 +133,8 @@ export const monoTheme: DashboardTheme = {
 
 export const cyberpunkTheme: DashboardTheme = {
   name: "cyberpunk",
-  label: "Cyberpunk",
-  description: "Neon green on black — matrix terminal",
+  label: "Киберпанк",
+  description: "Неоново-зелёный на чёрном — терминал в стиле «Матрицы»",
   palette: {
     background: { hex: "#040608", alpha: 1 },
     midground: { hex: "#9bffcf", alpha: 1 },
@@ -162,8 +162,8 @@ export const cyberpunkTheme: DashboardTheme = {
 
 export const roseTheme: DashboardTheme = {
   name: "rose",
-  label: "Rosé",
-  description: "Soft pink and warm ivory — easy on the eyes",
+  label: "Розе",
+  description: "Мягкий розовый и тёплый оттенок слоновой кости",
   palette: {
     background: { hex: "#1a0f15", alpha: 1 },
     midground: { hex: "#ffd4e1", alpha: 1 },
@@ -187,8 +187,8 @@ export const roseTheme: DashboardTheme = {
 /** Light mode — vivid Nous-blue accents on a cream canvas. */
 export const nousBlueTheme: DashboardTheme = {
   name: "nous-blue",
-  label: "Nous Blue",
-  description: "Light mode — vivid Nous-blue accents on cream canvas",
+  label: "Nous Синяя",
+  description: "Светлая тема с ярко-синими акцентами Nous на кремовом фоне",
   palette: {
     background: { hex: "#E8F2FD", alpha: 1 },
     midground: { hex: "#0053FD", alpha: 1 },
@@ -214,8 +214,8 @@ export const nousBlueTheme: DashboardTheme = {
  */
 export const defaultLargeTheme: DashboardTheme = {
   name: "default-large",
-  label: "Hermes Teal (Large)",
-  description: "Hermes Teal with bigger fonts and roomier spacing",
+  label: "Hermes Бирюзовая (крупная)",
+  description: "Бирюзовая тема Hermes с крупными шрифтами и увеличенными интервалами",
   palette: defaultTheme.palette,
   typography: {
     ...DEFAULT_TYPOGRAPHY,

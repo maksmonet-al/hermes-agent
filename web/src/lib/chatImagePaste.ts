@@ -96,13 +96,13 @@ function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () =>
-      reject(reader.error ?? new Error("image read failed"));
+      reject(reader.error ?? new Error("Не удалось прочитать изображение"));
     reader.onload = () => {
       const result = reader.result;
       if (typeof result === "string") {
         resolve(result);
       } else {
-        reject(new Error("image read failed"));
+        reject(new Error("Не удалось прочитать изображение"));
       }
     };
     reader.readAsDataURL(file);
@@ -123,10 +123,10 @@ export async function uploadChatImage(
   blob: Blob,
   profile = "",
 ): Promise<ChatImageUploadResult> {
-  if (blob.size === 0) throw new Error("clipboard image is empty");
+  if (blob.size === 0) throw new Error("изображение в буфере обмена пусто");
   if (blob.size > MAX_IMAGE_BYTES) {
     const mb = Math.round(MAX_IMAGE_BYTES / (1024 * 1024));
-    throw new Error(`image too large (max ${mb} MB)`);
+    throw new Error(`изображение слишком большое (максимум ${mb} МБ)`);
   }
 
   const mime = blob.type || "image/png";
@@ -158,7 +158,7 @@ export async function uploadChatImage(
 
   const uploaded = (await res.json()) as ChatImageUploadResult;
   if (!uploaded?.path) {
-    throw new Error("image upload did not return a path");
+    throw new Error("при загрузке изображения не получен путь");
   }
   return uploaded;
 }

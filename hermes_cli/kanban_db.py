@@ -942,6 +942,9 @@ class Task:
     # set the env var. Lets clients render a per-session board without
     # relying on tenant + time-window heuristics.
     session_id: Optional[str] = None
+    # System-owned workflow metadata for specialised Kanban templates.
+    # Ordinary tasks leave this NULL and retain their historical lifecycle.
+    metadata: Optional[dict] = None
     # Typed block reason (one of VALID_BLOCK_KINDS) or None for legacy/un-typed
     # blocks. Set by ``block_task``; preserved across unblock so a re-block for
     # the same kind is recognisable as an unblock↔re-block loop.
@@ -1029,6 +1032,10 @@ class Task:
             ),
             session_id=(
                 row["session_id"] if "session_id" in keys else None
+            ),
+            metadata=(
+                json.loads(row["metadata"])
+                if "metadata" in keys and row["metadata"] else None
             ),
             block_kind=(
                 row["block_kind"] if "block_kind" in keys and row["block_kind"] else None
@@ -1208,6 +1215,8 @@ CREATE TABLE IF NOT EXISTS tasks (
     -- set the env var. Indexed so per-session list queries stay cheap on
     -- larger boards.
     session_id           TEXT,
+    -- Template metadata is set only by system-created workflow steps.
+    metadata             TEXT,
     -- Typed block reason set by ``block_task`` (one of VALID_BLOCK_KINDS, or
     -- NULL for legacy/un-typed blocks). Drives routing: ``dependency`` never
     -- sits in ``blocked`` (goes to ``todo`` for parent-gating); the others go
@@ -2144,6 +2153,8 @@ def connect(
                 conn.execute("PRAGMA foreign_keys=ON")
                 conn.execute("PRAGMA secure_delete=ON")
                 conn.execute("PRAGMA cell_size_check=ON")
+                from hermes_cli.execution_supervisor import ensure_schema as _ensure_execution_schema
+                _ensure_execution_schema(conn)
         except Exception:
             conn.close()
             raise
@@ -2197,6 +2208,8 @@ def connect(
                     # stale PRAGMA snapshots during gateway startup.
                     conn.executescript(SCHEMA_SQL)
                     _migrate_add_optional_columns(conn)
+                    from hermes_cli.execution_supervisor import ensure_schema as _ensure_execution_schema
+                    _ensure_execution_schema(conn)
                     _INITIALIZED_PATHS.add(resolved)
         except Exception:
             conn.close()
@@ -2396,6 +2409,9 @@ def _migrate_add_optional_columns(conn: sqlite3.Connection) -> None:
         _add_column_if_missing(
             conn, "tasks", "session_id", "session_id TEXT"
         )
+
+    if "metadata" not in cols:
+        _add_column_if_missing(conn, "tasks", "metadata", "metadata TEXT")
 
     if "block_kind" not in cols:
         # Typed block reason (VALID_BLOCK_KINDS) or NULL for legacy/un-typed
@@ -2749,6 +2765,13 @@ def write_txn(conn: sqlite3.Connection):
     shadow the original exception with a spurious rollback error.
     """
     _assert_not_delegated_child_mutation()
+    # A few durable workflows compose existing Kanban writers with their
+    # own state-machine transaction.  Keep that composition in one SQLite
+    # transaction instead of committing the task half of a workflow before
+    # its supervisor row exists.
+    if getattr(conn, "in_transaction", False):
+        yield conn
+        return
     _execute_boundary_with_retry(conn, "BEGIN IMMEDIATE")
     try:
         yield conn
@@ -2839,6 +2862,7 @@ def create_task(
     provider_override: Optional[str] = None,
     goal_mode: bool = False,
     goal_max_turns: Optional[int] = None,
+    metadata: Optional[dict] = None,
     initial_status: str = "running",
     session_id: Optional[str] = None,
     board: Optional[str] = None,
@@ -3136,8 +3160,8 @@ def create_task(
                         branch_name, project_id, tenant, idempotency_key,
                         max_runtime_seconds,
                         skills, max_retries, model_override, provider_override,
-                        goal_mode, goal_max_turns, session_id
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        goal_mode, goal_max_turns, session_id, metadata
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         task_id,
@@ -3162,6 +3186,7 @@ def create_task(
                         1 if goal_mode else 0,
                         int(goal_max_turns) if goal_max_turns is not None else None,
                         session_id,
+                        json.dumps(metadata, ensure_ascii=False) if metadata is not None else None,
                     ),
                 )
                 for pid in parents:
@@ -4726,6 +4751,24 @@ def complete_task(
     """
     now = int(time.time())
 
+    # A root task governed by an active autonomous_execution may only reach
+    # ``done`` from the supervisor's terminal state transition.  Generic
+    # completion is intentionally rejected before any result/run mutation;
+    # system-created role steps are the only worker-completable tasks.
+    try:
+        autonomous_root = conn.execute(
+            "SELECT 1 FROM executions WHERE root_task_id=? LIMIT 1",
+            (task_id,),
+        ).fetchone()
+    except sqlite3.OperationalError as exc:
+        # Boards created before Phase 2.2 do not have the additive supervisor
+        # tables.  Preserve the legacy completion path for those boards.
+        if "no such table" not in str(exc).lower():
+            raise
+        autonomous_root = None
+    if autonomous_root is not None:
+        return False
+
     # Gate: verify created_cards BEFORE the main write txn. A rejected
     # completion still needs an auditable event, so we emit it in a
     # tiny dedicated txn, then raise. The caller is responsible for
@@ -4854,6 +4897,13 @@ def complete_task(
             completed_payload,
             run_id=run_id,
         )
+        # The task/run completion and its autonomous continuation are one
+        # durable state transition.  Keeping observation inside this write
+        # transaction closes the crash window in which restart recovery could
+        # see a done task with a still-ready execution step and publish a
+        # recovery sibling before the normal observer runs.
+        from hermes_cli.execution_supervisor import observe_completed_task_run
+        observe_completed_task_run(conn, task_id, run_id)
     # Prose-scan the summary + result for t_<hex> references that do
     # not resolve. Advisory — does not block the completion. Runs in
     # its own txn so the completion itself is already durable by the
@@ -8174,6 +8224,11 @@ def _dispatch_once_locked(
     # Reap zombie children from previously spawned workers. See
     # reap_worker_zombies() for the full rationale.
     reap_worker_zombies()
+    # Phase 2.2 recovery is deterministic and only materialises a missing
+    # system-owned continuation.  It runs under the dispatcher lock, so a
+    # restart cannot duplicate the next autonomous worker pass.
+    from hermes_cli.execution_supervisor import recover_autonomous_executions
+    recover_autonomous_executions(conn)
 
     result = DispatchResult()
     result.reclaimed = release_stale_claims(conn)

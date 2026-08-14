@@ -20,6 +20,7 @@ def _make_env_config(**overrides):
         "container_persistent": False,
         "docker_volumes": [],
         "docker_mount_cwd_to_workspace": True,
+        "docker_workspace_mount_mode": "rw",
         "docker_forward_env": ["MY_SECRET", "API_KEY"],
         "docker_persist_across_processes": False,
     }
@@ -80,6 +81,13 @@ class TestFileToolsContainerConfig:
             _make_env_config(docker_persist_across_processes=False), "t5"
         ).get("container_config", {})
         assert cc.get("docker_persist_across_processes") is False
+
+    def test_docker_workspace_mount_mode_is_forwarded(self):
+        """File tools must preserve the profile's read-only workspace policy."""
+        cc = self._run(
+            _make_env_config(docker_workspace_mount_mode="ro"), "t6"
+        ).get("container_config", {})
+        assert cc.get("docker_workspace_mount_mode") == "ro"
 
     def test_cwd_only_raw_task_override_reaches_file_environment(self):
         """CWD-only task overrides collapse to default but must keep their cwd."""

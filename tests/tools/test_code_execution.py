@@ -49,8 +49,17 @@ from tools.code_execution_tool import (
 )
 
 
-def test_remote_env_forwards_ephemeral_process_policy(monkeypatch):
-    """execute_code must share the worker's ephemeral container contract."""
+@pytest.mark.parametrize(
+    ("policy_key", "policy_value"),
+    [
+        ("docker_persist_across_processes", False),
+        ("docker_workspace_mount_mode", "ro"),
+    ],
+)
+def test_remote_env_forwards_container_policy(
+    monkeypatch, policy_key, policy_value
+):
+    """execute_code must share the worker's container policy."""
     from tools import code_execution_tool, terminal_tool
 
     config = {
@@ -67,7 +76,9 @@ def test_remote_env_forwards_ephemeral_process_policy(monkeypatch):
         "docker_run_as_host_user": False,
         "docker_network": False,
         "docker_persist_across_processes": False,
+        "docker_workspace_mount_mode": "rw",
     }
+    config[policy_key] = policy_value
     captured = {}
     fake_env = MagicMock()
 
@@ -89,7 +100,7 @@ def test_remote_env_forwards_ephemeral_process_policy(monkeypatch):
 
     assert env is fake_env
     assert env_type == "docker"
-    assert captured["container_config"]["docker_persist_across_processes"] is False
+    assert captured["container_config"][policy_key] == policy_value
 
 
 def _mock_handle_function_call(function_name, function_args, task_id=None, user_task=None):

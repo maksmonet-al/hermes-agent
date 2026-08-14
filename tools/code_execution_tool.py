@@ -763,6 +763,7 @@ def _get_or_create_env(task_id: str):
                 "container_disk": config.get("container_disk", 51200),
                 "container_persistent": config.get("container_persistent", True),
                 "docker_volumes": config.get("docker_volumes", []),
+                "docker_workspace_mount_mode": config.get("docker_workspace_mount_mode", "rw"),
                 "docker_run_as_host_user": config.get("docker_run_as_host_user", False),
                 "docker_network": config.get("docker_network", True),
                 "docker_persist_across_processes": config.get("docker_persist_across_processes", True),

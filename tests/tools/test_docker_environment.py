@@ -20,6 +20,7 @@ def _mock_subprocess_run(monkeypatch):
     """
     docker_env._cgroup_limits_ok = True
     calls = []
+    container_labels = {}
 
     def _run(cmd, **kwargs):
         calls.append((list(cmd) if isinstance(cmd, list) else cmd, kwargs))
@@ -27,7 +28,18 @@ def _mock_subprocess_run(monkeypatch):
             if cmd[1] == "version":
                 return subprocess.CompletedProcess(cmd, 0, stdout="Docker version", stderr="")
             if cmd[1] == "run":
+                for index, token in enumerate(cmd[:-1]):
+                    if token == "--label" and index + 1 < len(cmd):
+                        key, _, value = cmd[index + 1].partition("=")
+                        container_labels[key] = value
                 return subprocess.CompletedProcess(cmd, 0, stdout="fake-container-id\n", stderr="")
+            if (
+                cmd[1] == "inspect"
+                and "{{json .Config.Labels}}" in cmd
+            ):
+                return subprocess.CompletedProcess(
+                    cmd, 0, stdout=json.dumps(container_labels), stderr=""
+                )
         return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
 
     monkeypatch.setattr(docker_env.subprocess, "run", _run)
@@ -1465,6 +1477,102 @@ def test_cleanup_on_env_with_no_container_id_does_not_raise(monkeypatch):
     env._home_dir = None
     # No exception expected.
     env.cleanup()
+
+
+def test_cleanup_refuses_foreign_container_identity(monkeypatch):
+    """A stale/foreign Docker id must never be stopped or removed."""
+    monkeypatch.setattr(docker_env, "find_docker", lambda: "/usr/bin/docker")
+    monkeypatch.setattr(docker_env, "_get_active_profile_name", lambda: "developer")
+    _mock_subprocess_run(monkeypatch)
+    _install_fake_thread(monkeypatch)
+    env = _make_dummy_env(
+        task_id="owned-task", persist_across_processes=False
+    )
+
+    calls = []
+
+    def _foreign_inspect(cmd, **kwargs):
+        calls.append(list(cmd))
+        if cmd[1] == "inspect":
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                stdout=json.dumps(
+                    {
+                        "hermes-agent": "1",
+                        "hermes-task-id": "different-task",
+                        "hermes-profile": "developer",
+                        "hermes-egress": "off",
+                    }
+                ),
+                stderr="",
+            )
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(docker_env.subprocess, "run", _foreign_inspect)
+    env.cleanup()
+
+    assert any(call[1] == "inspect" for call in calls)
+    assert not any(call[1] in {"stop", "rm"} for call in calls)
+
+
+def test_cleanup_missing_container_is_idempotent(monkeypatch):
+    """An already-removed task container is a non-fatal cleanup success."""
+    monkeypatch.setattr(docker_env, "find_docker", lambda: "/usr/bin/docker")
+    monkeypatch.setattr(docker_env, "_get_active_profile_name", lambda: "developer")
+    _mock_subprocess_run(monkeypatch)
+    _install_fake_thread(monkeypatch)
+    env = _make_dummy_env(
+        task_id="already-gone", persist_across_processes=False
+    )
+
+    calls = []
+
+    def _missing(cmd, **kwargs):
+        calls.append(list(cmd))
+        if cmd[1] == "inspect":
+            return subprocess.CompletedProcess(
+                cmd, 1, stdout="", stderr="Error: No such container"
+            )
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(docker_env.subprocess, "run", _missing)
+    env.cleanup()
+    env.cleanup()
+
+    assert [call[1] for call in calls] == ["inspect"]
+
+
+def test_cleanup_preserves_bind_mounted_workspace_and_is_idempotent(
+    monkeypatch, tmp_path
+):
+    """Removing an ephemeral task container never removes its host worktree."""
+    workspace = tmp_path / "worktree"
+    workspace.mkdir()
+    artifact = workspace / "result.txt"
+    artifact.write_text("preserve me", encoding="utf-8")
+
+    monkeypatch.setattr(docker_env, "find_docker", lambda: "/usr/bin/docker")
+    monkeypatch.setattr(docker_env, "_get_active_profile_name", lambda: "developer")
+    calls = _mock_subprocess_run(monkeypatch)
+    _install_fake_thread(monkeypatch)
+    env = _make_dummy_env(
+        task_id="bind-preserve",
+        host_cwd=str(workspace),
+        auto_mount_cwd=True,
+        persistent_filesystem=True,
+        persist_across_processes=False,
+    )
+
+    calls.clear()
+    env.cleanup()
+    env.cleanup()
+
+    verbs = [cmd[1] for cmd, _kwargs in calls if isinstance(cmd, list) and len(cmd) > 1]
+    assert verbs.count("inspect") == 1
+    assert verbs.count("stop") == 1
+    assert verbs.count("rm") == 1
+    assert artifact.read_text(encoding="utf-8") == "preserve me"
 
 
 # ── Orphan reaper (issue #20561) ──────────────────────────────────

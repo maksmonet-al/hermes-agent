@@ -49,6 +49,49 @@ from tools.code_execution_tool import (
 )
 
 
+def test_remote_env_forwards_ephemeral_process_policy(monkeypatch):
+    """execute_code must share the worker's ephemeral container contract."""
+    from tools import code_execution_tool, terminal_tool
+
+    config = {
+        "env_type": "docker",
+        "docker_image": "test-image",
+        "cwd": "/workspace",
+        "host_cwd": None,
+        "timeout": 30,
+        "container_cpu": 1,
+        "container_memory": 512,
+        "container_disk": 1024,
+        "container_persistent": False,
+        "docker_volumes": [],
+        "docker_run_as_host_user": False,
+        "docker_network": False,
+        "docker_persist_across_processes": False,
+    }
+    captured = {}
+    fake_env = MagicMock()
+
+    def fake_create_environment(**kwargs):
+        captured.update(kwargs)
+        return fake_env
+
+    monkeypatch.setattr(terminal_tool, "_active_environments", {})
+    monkeypatch.setattr(terminal_tool, "_last_activity", {})
+    monkeypatch.setattr(terminal_tool, "_creation_locks", {})
+    monkeypatch.setattr(terminal_tool, "_creation_locks_lock", threading.Lock())
+    monkeypatch.setattr(terminal_tool, "_task_env_overrides", {})
+    monkeypatch.setattr(terminal_tool, "_get_env_config", lambda: config)
+    monkeypatch.setattr(terminal_tool, "_create_environment", fake_create_environment)
+    monkeypatch.setattr(terminal_tool, "_start_cleanup_thread", lambda: None)
+    monkeypatch.setattr(terminal_tool, "_resolve_container_task_id", lambda task_id: task_id)
+
+    env, env_type = code_execution_tool._get_or_create_env("code-task")
+
+    assert env is fake_env
+    assert env_type == "docker"
+    assert captured["container_config"]["docker_persist_across_processes"] is False
+
+
 def _mock_handle_function_call(function_name, function_args, task_id=None, user_task=None):
     """Mock dispatcher that returns canned responses for each tool."""
     if function_name == "terminal":

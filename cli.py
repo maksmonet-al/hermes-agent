@@ -960,6 +960,20 @@ def _cleanup_all_terminals(*args, **kwargs):
     return cleanup_all_environments(*args, **kwargs)
 
 
+def _cleanup_kanban_worker_terminals_before_hard_exit() -> None:
+    """Synchronously release task sandboxes before Kanban's ``os._exit``.
+
+    The signal path deliberately uses a hard exit so a stuck tool thread
+    cannot keep the worker PID alive.  Hard exit skips both ``finally`` and
+    ``atexit``, so the worker owner must perform terminal cleanup explicitly
+    after interrupt grace and before crossing that boundary.
+    """
+    try:
+        _cleanup_all_terminals()
+    except Exception:
+        logger.warning("Kanban worker terminal cleanup failed", exc_info=True)
+
+
 def set_sudo_password_callback(*args, **kwargs):
     from tools.terminal_tool import set_sudo_password_callback as _set_sudo_password_callback
 
@@ -16998,6 +17012,7 @@ def main(
                     _sig_mod.alarm(2)
             except Exception:
                 pass
+            _cleanup_kanban_worker_terminals_before_hard_exit()
             try:
                 import logging as _lg
                 _lg.shutdown()

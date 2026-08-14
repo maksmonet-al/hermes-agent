@@ -1911,6 +1911,23 @@ class DockerEnvironment(BaseEnvironment):
             should_stop = True
             should_remove = True
 
+        # The container id is process-owned state, but never trust an opaque
+        # Docker id as sufficient authority for a destructive operation.
+        # Verify the immutable Hermes task/profile labels immediately before
+        # stop/remove.  A missing container is an idempotent success; a label
+        # mismatch fails closed and leaves the foreign container untouched.
+        ownership = self._verify_cleanup_ownership(container_id)
+        if ownership is None:
+            self._container_id = None
+            return
+        if not ownership:
+            logger.error(
+                "Refusing cleanup of container %s: Hermes ownership labels do not match",
+                container_id[:12],
+            )
+            self._container_id = None
+            return
+
         # Capture state needed by the worker before we null out the attrs —
         # the worker thread can outlive ``self``.
         docker_exe = self._docker_exe
@@ -1955,6 +1972,57 @@ class DockerEnvironment(BaseEnvironment):
             for d in (self._workspace_dir, self._home_dir):
                 if d:
                     shutil.rmtree(d, ignore_errors=True)
+
+    def _verify_cleanup_ownership(self, container_id: str) -> Optional[bool]:
+        """Verify that *container_id* is the exact container this env created.
+
+        Returns ``True`` for a matching Hermes task container, ``False`` for
+        any identity mismatch, and ``None`` when the container is already
+        absent.  Docker ids cannot be reused, so a successful label check is
+        stable for the subsequent bounded stop/remove calls.
+        """
+        try:
+            result = subprocess.run(
+                [
+                    self._docker_exe,
+                    "inspect",
+                    "--format",
+                    "{{json .Config.Labels}}",
+                    container_id,
+                ],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=10,
+                check=False,
+                stdin=subprocess.DEVNULL,
+            )
+        except (subprocess.TimeoutExpired, OSError) as exc:
+            logger.warning(
+                "Could not verify cleanup ownership for container %s: %s",
+                container_id[:12], exc,
+            )
+            return False
+
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout or "").lower()
+            if "no such container" in detail or "no such object" in detail:
+                logger.info("Container %s is already absent", container_id[:12])
+                return None
+            logger.warning(
+                "Could not inspect cleanup ownership for container %s: %s",
+                container_id[:12], (result.stderr or result.stdout or "unknown error").strip(),
+            )
+            return False
+
+        try:
+            actual = json.loads(result.stdout or "{}")
+        except (TypeError, ValueError):
+            return False
+        if not isinstance(actual, dict):
+            return False
+        return all(actual.get(key) == value for key, value in self._labels.items())
 
     def wait_for_cleanup(self, timeout: float = 30.0) -> bool:
         """Block up to *timeout* seconds for the cleanup worker thread.

@@ -1768,15 +1768,30 @@ def is_persistent_env(task_id: str) -> bool:
 
 def cleanup_all_environments():
     """Clean up ALL active environments. Use with caution."""
-    task_ids = list(_active_environments.keys())
+    # Retain the environment objects before cleanup_vm() removes them from the
+    # registry.  Docker teardown is asynchronous; once the registry is empty,
+    # the later atexit hook cannot rediscover those objects to join their
+    # cleanup threads.  Process owners (CLI one-shot workers in particular)
+    # must not return until stop/remove has completed.
+    task_envs = list(_active_environments.items())
     cleaned = 0
     
-    for task_id in task_ids:
+    for task_id, _env in task_envs:
         try:
             cleanup_vm(task_id)
             cleaned += 1
         except Exception as e:
             logger.error("Error cleaning %s: %s", task_id, e, exc_info=True)
+
+    for task_id, env in task_envs:
+        wait_fn = getattr(env, "wait_for_cleanup", None)
+        if wait_fn is None:
+            continue
+        try:
+            if not wait_fn(timeout=15.0):
+                logger.warning("Timed out waiting for environment cleanup: %s", task_id)
+        except Exception as e:
+            logger.warning("Error waiting for environment cleanup %s: %s", task_id, e)
     
     # Also clean any orphaned directories
     scratch_dir = _get_scratch_dir()
@@ -1867,23 +1882,10 @@ def _atexit_cleanup():
     if _active_environments:
         count = len(_active_environments)
         logger.info("Shutting down %d remaining sandbox(es)...", count)
-        # Snapshot the env objects BEFORE cleanup_all_environments empties
-        # the dict; we need them to wait on docker cleanup threads after the
-        # registry has been cleared.
-        envs_to_wait = list(_active_environments.values())
+        # cleanup_all_environments retains and joins asynchronous backend
+        # teardown before returning.  This is also required by explicit CLI
+        # finally paths that run before atexit.
         cleanup_all_environments()
-        # Block briefly so docker stop/rm actually completes before the
-        # interpreter exits. Issue #20561 — without this join, the daemon
-        # cleanup threads were getting torn down mid-`docker stop`, leaving
-        # Exited containers piled up on the host.
-        for env in envs_to_wait:
-            wait_fn = getattr(env, "wait_for_cleanup", None)
-            if wait_fn is None:
-                continue
-            try:
-                wait_fn(timeout=15.0)
-            except Exception as e:  # never block shutdown on a bad backend
-                logger.debug("wait_for_cleanup raised on exit: %s", e)
 
 atexit.register(_atexit_cleanup)
 
